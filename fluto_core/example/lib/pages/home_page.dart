@@ -1,5 +1,6 @@
 import 'package:fluto_core/fluto.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -93,6 +94,45 @@ class _HomePageState extends State<HomePage> {
                 }
               },
               child: const Text("Trigger Index Error"),
+            ),
+           const Divider(),
+            ElevatedButton(
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString("test_key", "Hello, SharedPreferences!");
+
+                FlutoLogModel.log(
+                  "Saved value in SharedPreferences: Hello, SharedPreferences!",
+                  logType: FlutoLogType.info,
+                );
+              },
+              child: const Text("Set SharedPreferences Value"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                final value = prefs.getString("test_key") ?? "No Value Found";
+
+                FlutoLogModel.log(
+                  "Retrieved value from SharedPreferences: $value",
+                  logType: FlutoLogType.info,
+                );
+
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text("SharedPreferences Value"),
+                    content: Text(value),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("OK"),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              child: const Text("Get SharedPreferences Value"),
             ),
           ],
         ),

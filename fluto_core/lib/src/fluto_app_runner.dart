@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:fluto_core/fluto.dart';
+import 'package:fluto_core/src/shared_preference/shared_preference_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -11,6 +12,7 @@ import 'logger/logger_provider.dart';
 class FlutoAppRunner {
   static final FlutoAppRunner _instance = FlutoAppRunner._internal();
   late FlutoLoggerProvider _loggerProvider;
+  late SharedPreferencesProvider _sharedPreferencesProvider;
 
   factory FlutoAppRunner() {
     return _instance;
@@ -18,6 +20,7 @@ class FlutoAppRunner {
 
   FlutoAppRunner._internal() {
     _loggerProvider = FlutoLoggerProvider();
+    _sharedPreferencesProvider = SharedPreferencesProvider();
   }
 
   Future<void> runFlutoRunner({
@@ -43,8 +46,15 @@ class FlutoAppRunner {
           await _loggerProvider.initHive();
 
           runApp(
-            ChangeNotifierProvider.value(
-              value: _loggerProvider,
+              MultiProvider(
+              providers: [
+                ChangeNotifierProvider.value(
+                  value: _loggerProvider,
+                ),
+                ChangeNotifierProvider.value(
+                  value: _sharedPreferencesProvider,
+                ),
+              ],
               child: child,
             ),
           );
