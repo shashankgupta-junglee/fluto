@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:io';
 import 'package:fluto_core/core/fluto_storage.dart';
 import 'package:fluto_core/core/pluggable.dart';
 import 'package:fluto_core/core/plugin_callback_register.dart';
@@ -32,6 +33,8 @@ class Fluto extends StatefulWidget {
 
 class _FlutoState extends State<Fluto> {
   FlutoStorageModel? _savedData;
+  final GlobalKey<NavigatorState> _childNavigatorKey =
+      GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -54,12 +57,14 @@ class _FlutoState extends State<Fluto> {
       ...widget.pluginList
     ];
 
+    final GlobalKey<NavigatorState> pluginNagivationKey =
+        Platform.isMacOS ? _childNavigatorKey : widget.globalNavigatorKey;
+
     FlutoPluginRegistrar.registerAllPlugins(pluginList);
     for (final plugin in pluginList) {
       analysePlugin(plugin);
       final pluginRegister = PluginRegister(
-        globalContext:
-            widget.globalNavigatorKey.currentContext!, // Use the global context
+        pluginNavigatorKey: pluginNagivationKey,
         savePluginData: (final value) async {
           if (_savedData == null) {
             _savedData = FlutoStorageModel(
@@ -135,7 +140,7 @@ class _FlutoState extends State<Fluto> {
 
     return ChangeNotifierProvider<FlutoProvider>(
       create: (context) => FlutoProvider(
-        widget.globalNavigatorKey.currentContext!,
+        _childNavigatorKey,
       ),
       builder: (context, child) {
         return child ?? Container();

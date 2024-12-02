@@ -14,7 +14,11 @@ abstract class Pluggable {
   });
   PluginConfiguration get pluginConfiguration;
 
-  BuildContext? get context => _pluginRegister?.globalContext;
+  GlobalKey<NavigatorState> get pluginNavigatorKey =>
+      _pluginRegister!.pluginNavigatorKey;
+
+  BuildContext? get context =>
+      _pluginRegister?.pluginNavigatorKey.currentContext;
 
   PluginRegister? get pluginRegister => _pluginRegister;
   PluginRegister? _pluginRegister;

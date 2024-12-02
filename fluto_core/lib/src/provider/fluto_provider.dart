@@ -2,10 +2,10 @@ import 'package:draggable_widget/draggable_widget.dart';
 import 'package:flutter/material.dart';
 
 class FlutoProvider extends ChangeNotifier {
-  final BuildContext globalContext;
+  final GlobalKey<NavigatorState> chilcNavigatorKey;
   PluginSheetState _sheetState = PluginSheetState.closed;
 
-  FlutoProvider(this.globalContext);
+  FlutoProvider(this.chilcNavigatorKey);
   PluginSheetState get sheetState => _sheetState;
 
   bool get showDraggingButton => _sheetState == PluginSheetState.closed;
