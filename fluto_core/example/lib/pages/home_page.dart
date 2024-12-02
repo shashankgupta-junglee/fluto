@@ -81,6 +81,7 @@ class _HomePageState extends State<HomePage> {
             ElevatedButton(
               onPressed: () {
                 try {
+                  print("Hello i am here");
                   List<int> numbers = [1, 2, 3];
                   print(numbers[5]); // Index out of range
                 } catch (e, stackTrace) {

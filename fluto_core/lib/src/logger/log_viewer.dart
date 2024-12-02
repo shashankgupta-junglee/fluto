@@ -15,6 +15,7 @@ class LogViewer extends StatefulWidget {
 class _LogViewerState extends State<LogViewer> {
   late FlutoLoggerProvider _flutoLoggerProvider;
   FlutoLogType _selectedLogType = FlutoLogType.debug;
+  final TextEditingController _logSearchController = TextEditingController();
 
   @override
   void initState() {
@@ -29,16 +30,104 @@ class _LogViewerState extends State<LogViewer> {
     });
   }
 
+  Future<void> showPicker() async {
+    // Show Date Range Picker
+    DateTimeRange? dateTimeRange = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime.now().subtract(
+        const Duration(days: 100),
+      ),
+      lastDate: DateTime.now().add(
+        const Duration(days: 100),
+      ),
+      initialDateRange: _flutoLoggerProvider.dateTimeRange,
+    );
+
+    if (dateTimeRange != null) {
+      // Show Time Picker for Start Time
+      TimeOfDay? startTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        helpText: "Select Start Time",
+      );
+
+      if (startTime == null) return; // User canceled the start time picker
+
+      // Show Time Picker for End Time
+      TimeOfDay? endTime = await showTimePicker(
+        context: context,
+        initialTime: startTime,
+        helpText: "Select End Time",
+      );
+
+      if (endTime == null) return; // User canceled the end time picker
+
+      // Combine date range with start and end times
+      DateTime startDateTime = DateTime(
+        dateTimeRange.start.year,
+        dateTimeRange.start.month,
+        dateTimeRange.start.day,
+        startTime.hour,
+        startTime.minute,
+      );
+
+      DateTime endDateTime = DateTime(
+        dateTimeRange.end.year,
+        dateTimeRange.end.month,
+        dateTimeRange.end.day,
+        endTime.hour,
+        endTime.minute,
+      );
+
+      // Notify the provider with the new date and time range
+      _flutoLoggerProvider.onDateRangeChange(
+        DateTimeRange(start: startDateTime, end: endDateTime),
+        message: _logSearchController.text.trim(),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${_selectedLogType.name.camelCase} logs"),
+        title: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: Theme.of(context).secondaryHeaderColor,
+            ),
+          ),
+          child: TextField(
+            onChanged: (value) {
+              _flutoLoggerProvider.onSearchLogs(logMessage: value);
+            },
+            controller: _logSearchController,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.all(10),
+              suffixIcon: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: InkWell(
+                  onTap: () {
+                    _logSearchController.clear();
+                    _flutoLoggerProvider.clearSearch();
+                  },
+                  child: const Icon(
+                    Icons.clear,
+                    size: 25,
+                  ),
+                ),
+              ),
+              border: InputBorder.none,
+              hintText: "Search ${_selectedLogType.name} logs",
+            ),
+          ),
+        ),
         actions: [
           PopupMenuButton<FlutoLogType>(
             icon: const Icon(Icons.filter_list),
             padding: const EdgeInsets.symmetric(
-              horizontal: 20,
+              horizontal: 10,
             ),
             onSelected: (FlutoLogType logType) {
               setState(() {
@@ -51,8 +140,9 @@ class _LogViewerState extends State<LogViewer> {
                   value: logType,
                   child: Row(
                     children: [
-                      Checkbox(
-                        value: logType == _selectedLogType,
+                      Radio(
+                        groupValue: _selectedLogType,
+                        value: logType,
                         onChanged: (value) {
                           setState(() {
                             _selectedLogType = logType;
@@ -60,7 +150,9 @@ class _LogViewerState extends State<LogViewer> {
                           Navigator.pop(context);
                         },
                       ),
-                      Text(logType.toString().split('.').last),
+                      Text(
+                        logType.toString().split('.').last,
+                      ),
                     ],
                   ),
                 );
@@ -74,18 +166,59 @@ class _LogViewerState extends State<LogViewer> {
           final logs = logProvider.getAllLogs(
             logType: _selectedLogType,
           );
-          return LogsTab(
-            logs: logs,
-            logType: _selectedLogType,
+          return Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                      onPressed: () async {
+                        showPicker();
+                      },
+                      child: Text(
+                        logProvider.dateTimeRange != null
+                            ? (logProvider.dateTimeRange.dateRangeString)
+                            : "Select Date Range",
+                        style: Theme.of(context).textTheme.titleMedium,
+                      )),
+                  if (logProvider.dateTimeRange != null)
+                    IconButton(
+                      onPressed: () {
+                        _flutoLoggerProvider.clearDateRange(
+                          logMessage: _logSearchController.text,
+                        );
+                      },
+                      icon: const Icon(Icons.clear),
+                    )
+                  else
+                    IconButton(
+                      onPressed: () {
+                        showPicker();
+                      },
+                      icon: const Icon(Icons.date_range),
+                    )
+                ],
+              ),
+              Expanded(
+                child: LogsTab(
+                  logs: logs,
+                  logType: _selectedLogType,
+                ),
+              ),
+            ],
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
+        // shape
         tooltip: "Clear ${_selectedLogType.name} logs",
         onPressed: () {
           _flutoLoggerProvider.clearLogs(type: _selectedLogType);
         },
-        child: const Icon(Icons.clear_all_rounded),
+        child: const Text(
+          "Clear",
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -113,27 +246,33 @@ class LogsTab extends StatelessWidget {
       itemCount: logs.length,
       itemBuilder: (context, index) {
         final log = logs[index];
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          child: ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            onTap: () {
-              showLogDetailsDialog(
-                context: context,
-                flutoLog: log,
-              );
-            },
-            title: Text(
-              log.logMessage,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(log.getFormattedLogTime),
-            tileColor: Theme.of(context).focusColor,
-          ),
-        );
+        return log.canShow
+            ? Dismissible(
+                key: ValueKey(log.logTime),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  child: ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    onTap: () {
+                      showLogDetailsDialog(
+                        context: context,
+                        flutoLog: log,
+                      );
+                    },
+                    title: Text(
+                      log.logMessage,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(log.getFormattedLogTime),
+                    tileColor: Theme.of(context).focusColor,
+                  ),
+                ),
+              )
+            : const IgnorePointer();
       },
     );
   }

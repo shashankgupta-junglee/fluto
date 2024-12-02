@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:fluto_core/src/extension/fluto_log_extension.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:fluto_core/src/model/fluto_log_model.dart';
 import 'package:fluto_core/src/model/fluto_log_type.dart';
@@ -10,15 +12,89 @@ class FlutoLoggerProvider with ChangeNotifier {
   Box<FlutoLogModel>? _logBox;
   List<FlutoLogModel> _localLogData = [];
   List<FlutoLogModel> get localLogData => List.unmodifiable(_localLogData);
+  Timer? _debounce;
+  DateTimeRange? dateTimeRange;
 
   Future<void> initHive() async {
     _logBox = await Hive.openBox<FlutoLogModel>(_hiveBoxName);
     syncLocalLogs();
   }
 
+  void onDateRangeChange(DateTimeRange range, {String message = ""}) {
+    dateTimeRange = range;
+    onSearchLogs(
+      dateTime: range,
+      logMessage: message,
+    );
+    notifyListeners();
+  }
+
+  void clearDateRange({String logMessage = ""}) {
+    _localLogData = [..._localLogData].map(
+      (element) {
+        bool isMessageMatch = element.logMessage.contains(logMessage);
+        if (element.logType == FlutoLogType.error.toString()) {
+          isMessageMatch = isMessageMatch &&
+              ((element.stackTraceString ?? "").contains(logMessage) ||
+                  (element.errorString ?? "").contains(logMessage));
+        }
+
+        return element.copyWith(
+          canShow: isMessageMatch,
+        );
+      },
+    ).toList();
+    dateTimeRange = null;
+    notifyListeners();
+  }
+
+  void clearSearch() {
+    _localLogData = [..._localLogData].map(
+      (element) {
+        final isDateMatch = dateTimeRange.inRange(
+          dateTime: element.logTime,
+        );
+
+        return element.copyWith(
+          canShow: isDateMatch,
+        );
+      },
+    ).toList();
+    notifyListeners();
+  }
+
+  void onSearchLogs({
+    String logMessage = "",
+    DateTimeRange? dateTime,
+  }) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      filterLogs(
+        logMessage: logMessage,
+      );
+    });
+  }
+
+  void filterLogs({String logMessage = ""}) {
+    _localLogData = [..._localLogData].map(
+      (element) {
+        bool isMessageMatch = element.logMessage.contains(logMessage);
+        if (element.logType == FlutoLogType.error.toString()) {
+          isMessageMatch = isMessageMatch &&
+              ((element.stackTraceString ?? "").contains(logMessage) ||
+                  (element.errorString ?? "").contains(logMessage));
+        }
+        final isDateMatch = dateTimeRange.inRange(dateTime: element.logTime);
+        return element.copyWith(
+          canShow: isMessageMatch && isDateMatch,
+        );
+      },
+    ).toList();
+    notifyListeners();
+  }
+
   void syncLocalLogs() {
     _localLogData = (_logBox?.values ?? []).toList().cast<FlutoLogModel>();
-    print("Log Count: ${_localLogData.length}");
     notifyListeners();
   }
 
