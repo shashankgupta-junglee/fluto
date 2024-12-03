@@ -16,7 +16,7 @@ class HiveValue<T> {
     this.fromJson,
   });
 
-  T get value => fromJson?.call(_box.get(key)) as T;
+  Future<T> get value async => fromJson?.call(await _box.get(key)) as T;
   Future<void> setValue(T value) {
     try {
       return _box.put(key, toJson?.call(value));

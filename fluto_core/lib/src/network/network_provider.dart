@@ -5,7 +5,7 @@ import 'network_storage.dart';
 import 'package:flutter/foundation.dart';
 
 class NetworkProvider extends ChangeNotifier {
-  NetworkProvider({required this.storage});
+  NetworkProvider({required this.storage}) {}
 
   static Future<NetworkProvider> init() async {
     await Hive.initFlutter();
@@ -19,6 +19,11 @@ class NetworkProvider extends ChangeNotifier {
 
   final Set<InfospectNetworkCall> _networkCalls = {};
   Set<InfospectNetworkCall> get networkCalls => _networkCalls;
+
+  Future<void> loadPreviousCalls() async {
+    _networkCalls.addAll(await storage.networkCall.value);
+    notifyListeners();
+  }
 
   void addCall(InfospectNetworkCall call) {
     _networkCalls.add(call);

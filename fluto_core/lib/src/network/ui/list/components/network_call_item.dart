@@ -39,7 +39,6 @@ class NetworkCallItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 4),
-
               Wrap(
                 crossAxisAlignment: WrapCrossAlignment.center,
                 spacing: 4,
@@ -77,7 +76,7 @@ class NetworkCallItem extends StatelessWidget {
 
               /// Path
               HighlightText(
-                text: networkCall.request!.url.toString(),
+                text: networkCall.request == null ? '' : networkCall.request!.url.toString(),
                 highlight: searchedText,
                 selectable: false,
                 style: textTheme.titleMedium,
