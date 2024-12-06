@@ -27,6 +27,7 @@ dependencies:
   flutter_dotenv: ^5.2.1
   networking_ui:
     path: ../networking_ui
+  flutter_screen_recording: ^2.0.18
 
 dev_dependencies:
   flutter_test:
