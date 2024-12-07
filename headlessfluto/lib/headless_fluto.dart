@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:headlessfluto/bottom_sheet.dart';
-import 'package:networking_ui/unity_message_ui.dart';
+import 'package:networking_ui/networking_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:headlessfluto/fluto_log_type.dart';
 import 'package:headlessfluto/provider/supabase_provider.dart';

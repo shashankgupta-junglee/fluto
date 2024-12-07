@@ -7,9 +7,12 @@ import 'package:fluto_core/core/plugin_callback_register.dart';
 import 'package:fluto_core/fluto.dart';
 import 'package:fluto_core/src/model/fluto_storage_model.dart';
 import 'package:fluto_core/src/provider/fluto_provider.dart';
+import 'package:fluto_core/src/provider/screen_record_provider.dart';
 import 'package:fluto_core/src/ui/components/dragging_button.dart';
+import 'package:fluto_core/src/ui/components/screen_recording_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:screen_recorder/screen_recorder.dart';
 
 class Fluto extends StatefulWidget {
   const Fluto({
@@ -148,8 +151,22 @@ class _FlutoState extends State<Fluto> {
       child: Scaffold(
         body: Stack(
           children: [
-            child ?? const SizedBox(),
-             DraggingButton(
+            Consumer<ScreenRecordProvider>(
+                builder: (context, screenRecProvider, _) {
+              if (screenRecProvider.screenRecorderController == null) {
+                return child ?? const SizedBox();
+              }
+              return ScreenRecorder(
+                child: child ?? const SizedBox(),
+                controller: screenRecProvider.screenRecorderController!,
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+              );
+            }),
+            DraggingButton(
+              childNavigatorKey: widget.globalNavigatorKey,
+            ),
+            ScreenRecordingButton(
               childNavigatorKey: widget.globalNavigatorKey,
             ),
           ],

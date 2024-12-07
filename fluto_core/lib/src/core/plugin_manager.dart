@@ -2,8 +2,7 @@ import 'package:fluto_core/core/pluggable.dart';
 import 'package:fluto_core/fluto.dart';
 import 'package:fluto_core/src/fluto_app_runner.dart';
 import 'package:fluto_core/src/logger/log_viewer.dart';
-import 'package:networking_ui/networking_ui.dart';
-import 'package:unity_message_ui/unity_message_ui.dart';
+import 'package:fluto_core/src/provider/screen_record_provider.dart';
 
 abstract class FlutoPluginRegistrar {
   static Map<String, Pluggable> defaultPlugins = {
@@ -25,6 +24,11 @@ abstract class FlutoPluginRegistrar {
         storage: FlutoAppRunner().unityMessageStorage,
       ),
       name: "UnityMessage",
+    ),
+    "UserActivity": ScreenLauncherPlugin(
+      devIdentifier: 'four',
+      screen:const UserActivityListView(),
+      name: "UserActivity",
     ),
   };
   static final Map<String, Pluggable> _plugins = {};

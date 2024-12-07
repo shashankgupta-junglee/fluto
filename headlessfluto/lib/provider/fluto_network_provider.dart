@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:networking_ui/unity_message_ui.dart';
+import 'package:networking_ui/networking_ui.dart';
 
 class FlutoNetworkProvider extends ChangeNotifier {
   List<InfospectNetworkCall> _networkCalls = [];
