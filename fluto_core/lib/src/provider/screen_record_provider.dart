@@ -53,7 +53,7 @@ class ScreenRecordProvider extends ChangeNotifier {
               data ?? [],
             ),
           );
-      print("supabaseResponse: ${supabaseResponse.data}");
+      // print("supabaseResponse: ${supabaseResponse.data}");
     }
     notifyListeners();
     // if (data == null) {
