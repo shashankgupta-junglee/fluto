@@ -29,6 +29,8 @@ dependencies:
     path: ../networking_ui
   unity_message_ui:
     path: ../unity_message_ui
+  gif_view: ^0.4.4
+  screen_recorder: ^0.3.0
 
 dev_dependencies:
   flutter_test:
