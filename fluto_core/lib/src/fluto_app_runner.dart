@@ -45,6 +45,7 @@ class FlutoAppRunner {
     Future<void> Function()? onInit,
     void Function(Object error, StackTrace stack)? onError,
   }) async {
+    WidgetsFlutterBinding.ensureInitialized();
     BindingBase.debugZoneErrorsAreFatal = true;
 
     await runZonedGuarded(

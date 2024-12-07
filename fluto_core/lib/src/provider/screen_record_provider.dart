@@ -45,7 +45,7 @@ class ScreenRecordProvider extends ChangeNotifier {
     recordedByteData[
         "screen_record -${DateTime.now().millisecondsSinceEpoch}"] = data ?? [];
     if (supabase != null) {
-      String supabaseResponse = await supabase!.client.storage
+     final supabaseResponse = await supabase!.client.storage
           .from("fluto_useractivity")
           .uploadBinary(
             "userActivity/screen_record -${DateTime.now().millisecondsSinceEpoch}.gif",
@@ -53,7 +53,7 @@ class ScreenRecordProvider extends ChangeNotifier {
               data ?? [],
             ),
           );
-      print("supabaseResponse: $supabaseResponse");
+      print("supabaseResponse: ${supabaseResponse.data}");
     }
     notifyListeners();
     // if (data == null) {
