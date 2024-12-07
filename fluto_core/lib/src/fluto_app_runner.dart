@@ -67,7 +67,9 @@ class FlutoAppRunner {
           await _loggerProvider.initHive(
             supabase: _supabaseProvider.supabase,
           );
-          await _screenRecordProvider.init();
+          await _screenRecordProvider.init(
+            supabase: _supabaseProvider.supabase,
+          );
           if (onInit != null) {
             await onInit();
           }

@@ -7,8 +7,10 @@ import 'package:provider/provider.dart';
 import 'package:screen_recorder/screen_recorder.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ScreenRecordProvider extends ChangeNotifier {
+  Supabase? supabase;
   bool _isRecording = false;
   bool get isRecording => _isRecording;
   ScreenRecorderController? screenRecorderController;
@@ -16,10 +18,13 @@ class ScreenRecordProvider extends ChangeNotifier {
   Map<String, List<int>> recordedByteData = {};
   Directory? downloadDirectory;
 
-  Future<void> init() async {
+  Future<void> init({
+    required Supabase? supabase,
+  }) async {
     screenRecorderController = ScreenRecorderController(pixelRatio: 1);
     downloadDirectory = await getDownloadsDirectory();
     downloadDirectory = Directory('${downloadDirectory?.path}/fluto');
+    this.supabase = supabase;
     notifyListeners();
   }
 
@@ -34,9 +39,22 @@ class ScreenRecordProvider extends ChangeNotifier {
     _isRecording = false;
     notifyListeners();
     var data = await screenRecorderController?.exporter.exportGif();
+    if ((data ?? []).isEmpty) {
+      return;
+    }
     recordedByteData[
         "screen_record -${DateTime.now().millisecondsSinceEpoch}"] = data ?? [];
-    print(recordedByteData);
+    if (supabase != null) {
+      String supabaseResponse = await supabase!.client.storage
+          .from("fluto_useractivity")
+          .uploadBinary(
+            "userActivity/screen_record -${DateTime.now().millisecondsSinceEpoch}.gif",
+            Uint8List.fromList(
+              data ?? [],
+            ),
+          );
+      print("supabaseResponse: $supabaseResponse");
+    }
     notifyListeners();
     // if (data == null) {
     //   return;
