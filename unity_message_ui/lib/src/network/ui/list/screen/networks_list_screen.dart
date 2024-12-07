@@ -1,3 +1,5 @@
+import 'package:unity_message_ui/src/network/ui/raw_data_viewer/screen/raw_data_viewer_screen.dart';
+
 import '/src/network/infospect_network_call.dart';
 import '/src/network/network_storage.dart';
 import '/src/network/ui/filters/network_filters.dart';
@@ -19,7 +21,8 @@ class _UnityMessageListScreenState extends State<UnityMessageListScreen> {
 
   @override
   void initState() {
-    _networkFilters = UnityMessageFilters(networkCallsGetter: () => widget.storage.networkCall);
+    _networkFilters = UnityMessageFilters(
+        networkCallsGetter: () => widget.storage.networkCall);
     widget.storage.addListener(_listener);
     super.initState();
   }
@@ -74,6 +77,16 @@ class UnityMessageListBody extends StatelessWidget {
                 networkCall: filteredCalls.elementAt(index),
                 searchedText: filters.query,
                 onItemClicked: (UnityMessageModel call) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return RawDataViewerScreen(
+                          data: filteredCalls.elementAt(index).toJson(),
+                          beautificationRequired: true,
+                        );
+                      },
+                    ),
+                  );
                   // Navigator.of(context).push(
                   //   MaterialPageRoute(
                   //     builder: (context) {
