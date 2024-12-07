@@ -34,6 +34,7 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (context) {
           return FlutoNetworkProvider();
         }),
+        
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

@@ -38,9 +38,26 @@ class SupabaseProvider extends ChangeNotifier {
     });
     await _supabase!.client.from('fluto_network').select().then((value) {
       for (var element in value) {
-        final data = jsonDecode((jsonDecode(json.encode(element).toString())["network_data"])) as Map<String, dynamic>;
+        final data = jsonDecode(
+                (jsonDecode(json.encode(element).toString())["network_data"]))
+            as Map<String, dynamic>;
         networkProvider.addNetworkCall(InfospectNetworkCall.fromMap(data));
       }
     });
+  }
+
+  Future<List<FileObject>?> getUserActivityRecordings() async {
+    final bucket =
+        await _supabase?.client.storage.from('fluto_useractivity').list(
+              path: "userActivity",
+            );
+    return bucket;
+  }
+
+  Future<String> retriveUrl(String path) async {
+    final response = _supabase!.client.storage
+        .from('fluto_useractivity')
+        .getPublicUrl("userActivity/$path");
+    return response;
   }
 }
