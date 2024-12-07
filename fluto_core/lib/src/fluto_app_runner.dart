@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:fluto_core/fluto.dart';
+import 'package:fluto_core/src/provider/screen_record_provider.dart';
 
 import 'package:fluto_core/src/provider/supabase_provider.dart';
 import 'package:flutter/foundation.dart';
@@ -11,7 +12,6 @@ import 'package:networking_ui/networking_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:unity_message_ui/unity_message_ui.dart';
 
-
 import 'fluto_network_storage.dart';
 import 'logger/logger_provider.dart';
 
@@ -21,6 +21,7 @@ class FlutoAppRunner {
   late NetworkStorage _networkStorage;
   late UnityMessageStorage unityMessageStorage;
   late SupabaseProvider _supabaseProvider;
+  late ScreenRecordProvider _screenRecordProvider;
 
   factory FlutoAppRunner() {
     return _instance;
@@ -29,11 +30,12 @@ class FlutoAppRunner {
   FlutoAppRunner._internal() {
     _loggerProvider = FlutoLoggerProvider();
     _supabaseProvider = SupabaseProvider();
+    _screenRecordProvider = ScreenRecordProvider();
   }
 
-  Future<void> _initialize()async{
+  Future<void> _initialize() async {
     final LazyBox box = await Hive.openLazyBox('UnityProvider');
-    unityMessageStorage = FlutoUnityMessageStorage(box:box);
+    unityMessageStorage = FlutoUnityMessageStorage(box: box);
     await unityMessageStorage.init();
     UnityMessageInterceptor.init(unityMessageStorage);
   }
@@ -65,11 +67,15 @@ class FlutoAppRunner {
           await _loggerProvider.initHive(
             supabase: _supabaseProvider.supabase,
           );
+          await _screenRecordProvider.init(
+            supabase: _supabaseProvider.supabase,
+          );
           if (onInit != null) {
             await onInit();
           }
           final LazyBox box = await Hive.openLazyBox('NetworkProvider');
-          _networkStorage = FlutoNetworkStorage(box: box, supabase: _supabaseProvider.supabase);
+          _networkStorage = FlutoNetworkStorage(
+              box: box, supabase: _supabaseProvider.supabase);
           await _networkStorage.init();
           NetworkCallInterceptor.init(_networkStorage);
 
@@ -83,6 +89,9 @@ class FlutoAppRunner {
                 ),
                 ChangeNotifierProvider.value(
                   value: _supabaseProvider,
+                ),
+                ChangeNotifierProvider.value(
+                  value: _screenRecordProvider,
                 ),
               ],
               child: child,

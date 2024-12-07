@@ -1,8 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:headlessfluto/activity_viewer.dart';
 import 'package:headlessfluto/bottom_sheet.dart';
-import 'package:networking_ui/unity_message_ui.dart';
+import 'package:networking_ui/networking_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:headlessfluto/fluto_log_type.dart';
 import 'package:headlessfluto/provider/supabase_provider.dart';
@@ -26,7 +27,7 @@ class _HeadlessFlutoState extends State<HeadlessFluto>
   @override
   void initState() {
     super.initState();
-    tabController = TabController(length: 2, vsync: this);
+    tabController = TabController(length: 3, vsync: this);
     supabaseProvider = Provider.of<SupabaseProvider>(
       context,
       listen: false,
@@ -51,8 +52,9 @@ class _HeadlessFlutoState extends State<HeadlessFluto>
       var networkStream = await supabaseProvider?.getNetworkStream();
       networkStream?.listen((List<Map<String, dynamic>> event) {
         for (var element in event) {
-          final data =
-              jsonDecode((jsonDecode(json.encode(element).toString())["network_data"])) as Map<String, dynamic>;
+          final data = jsonDecode(
+                  (jsonDecode(json.encode(element).toString())["network_data"]))
+              as Map<String, dynamic>;
           networkProvider?.addNetworkCall(InfospectNetworkCall.fromMap(data));
         }
       });
@@ -84,12 +86,12 @@ class _HeadlessFlutoState extends State<HeadlessFluto>
           tabs: const [
             Tab(text: 'Log Viewer'),
             Tab(text: 'Network Viewer'),
+            Tab(text: 'User Activity Viewer'),
           ],
         ),
       ),
       body: TabBarView(
         controller: tabController,
-
         children: [
           Consumer<HeadlessFlutoLoggerProvider>(
             builder: (context, loggerProvider, child) {
@@ -117,7 +119,8 @@ class _HeadlessFlutoState extends State<HeadlessFluto>
                       Expanded(
                         child: TabBarView(
                           children: FlutoLogType.values.map((type) {
-                            List<Map<String, dynamic>> logs = loggerProvider.segregatedLogs[type]!;
+                            List<Map<String, dynamic>> logs =
+                                loggerProvider.segregatedLogs[type]!;
                             return RefreshIndicator(
                               onRefresh: _refreshLogs,
                               child: logs.isEmpty
@@ -140,7 +143,8 @@ class _HeadlessFlutoState extends State<HeadlessFluto>
                                           ),
                                           child: ListTile(
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(7),
+                                              borderRadius:
+                                                  BorderRadius.circular(7),
                                             ),
                                             onTap: () {
                                               showLogDetailsDialog(
@@ -153,7 +157,8 @@ class _HeadlessFlutoState extends State<HeadlessFluto>
                                               maxLines: 3,
                                               overflow: TextOverflow.ellipsis,
                                             ),
-                                            tileColor: Theme.of(context).focusColor,
+                                            tileColor:
+                                                Theme.of(context).focusColor,
                                           ),
                                         );
                                       },
@@ -174,7 +179,8 @@ class _HeadlessFlutoState extends State<HeadlessFluto>
                 networkCallsGetter: () => value.networkCalls,
               ),
             ),
-          )
+          ),
+          ActivityViewer(),
           // Consumer<FlutoNetworkProvider>(
           //   builder: (context, networkProvider, child) {
           //     List<NetworkCallModel> networkCalls =

@@ -19,6 +19,7 @@ class FlutoProvider extends ChangeNotifier {
   }
 
   final DragController dragController = DragController();
+  final DragController screenRecordingDrager = DragController();
 }
 
 enum PluginSheetState { clicked, clickedAndOpened, closed }
