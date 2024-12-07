@@ -21,7 +21,7 @@ class ScreenRecordingButton extends StatelessWidget {
       return DraggableWidget(
         bottomMargin: 120,
         topMargin: 120,
-        intialVisibility: showDraggingButton,
+        intialVisibility: screenRecProvider.isRecording,
         horizontalSpace: 5,
         shadowBorderRadius: 1,
         initialPosition: AnchoringPosition.bottomLeft,
