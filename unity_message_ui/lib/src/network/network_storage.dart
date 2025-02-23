@@ -1,5 +1,3 @@
-// import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'infospect_network_call.dart';
 import 'package:flutter/foundation.dart';
 
@@ -12,16 +10,15 @@ abstract class LazyUnityBox {
 
 class UnityMessageStorage extends ChangeNotifier {
   final LazyUnityBox _box;
-  // Supabase? supaBase;
 
   UnityMessageStorage(this._box) {
-    // supaBase = supabase;
     notifyListeners();
     init();
   }
 
   Future<void> init() async {
-    final futures = await Future.wait(_box.keys.map((key) => _getNetworkCall(key)));
+    final futures =
+        await Future.wait(_box.keys.map((key) => _getNetworkCall(key)));
     final calls = futures.whereType<UnityMessageModel>();
     _networkCall.addAll(calls);
     notifyListeners();
@@ -34,15 +31,6 @@ class UnityMessageStorage extends ChangeNotifier {
     try {
       _networkCall.add(call);
       await _box.put(call.hashCode, call.toJson());
-      // if (supaBase != null) {
-      //   try {
-      //     await supaBase!.client.from('fluto_network').insert({
-      //       "network_data": call.toJson(),
-      //     });
-      //   } catch (e) {
-      //     print("Error adding network call to supabase\n$e");
-      //   }
-      // }
     } catch (e) {
       throw Exception("Error adding network call\n$e");
     }

@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 
 class Navigation {
-  final VoidCallback onLaunch;
+  final ValueSetter<BuildContext> onLaunch;
   Navigation(this.onLaunch);
 
   factory Navigation.byScreen({
-    required BuildContext globalContext,
     required Widget screen,
   }) {
-    Navigator.pop(globalContext);
     return _ScreenNavigation(
-      globalContext: globalContext,
       screen: screen,
     );
   }
@@ -19,10 +16,9 @@ class Navigation {
 class _ScreenNavigation extends Navigation {
   _ScreenNavigation({
     required Widget screen,
-    required BuildContext globalContext,
   }) : super(
-          () {
-            Navigator.of(globalContext).push(
+          (context) {
+            Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (BuildContext context) => screen,
               ),

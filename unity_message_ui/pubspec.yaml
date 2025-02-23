@@ -18,6 +18,12 @@ dependencies:
 
   share_plus: ^10.1.2
   flutter_json_view: ^1.1.5
+  fluto_core:
+    path: ../fluto_core
+
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -14,6 +14,11 @@ dependencies:
   flutter_bloc: ^8.1.6
   http: ^1.2.2
   package_info_plus: ^8.1.1
+  fluto_core:
+    path: ../fluto_core
+
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
   
   share_plus: ^10.1.2
   flutter_json_view: ^1.1.5

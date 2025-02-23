@@ -22,8 +22,10 @@ class ChangeFlavourScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 20),
-              const Text("Change ENV/FLAVOUR",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text(
+                "Change ENV/FLAVOUR",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
               ...config.flavours.entries.map((element) {
                 return FutureBuilder<String?>(
                   future: router.getValue(element.key),
@@ -43,7 +45,7 @@ class ChangeFlavourScreen extends StatelessWidget {
                     );
                   },
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),

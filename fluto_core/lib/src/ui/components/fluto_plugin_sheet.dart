@@ -1,103 +1,43 @@
 import 'dart:io';
-
 import 'package:fluto_core/core/pluggable.dart';
-import 'package:fluto_core/src/core/plugin_manager.dart';
-import 'package:fluto_core/src/provider/fluto_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-Future<void> showFlutoBottomSheet(BuildContext context) async {
-  final pluginList = FlutoPluginRegistrar.pluginList;
-  final childNavigatorKey = context.read<FlutoProvider>().chilcNavigatorKey;
-  final provider = context.read<FlutoProvider>();
-  if (Platform.isMacOS) {
-    provider.setSheetState(PluginSheetState.clicked);
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return Builder(
-          builder: (context) {
-            provider.setSheetState(PluginSheetState.clickedAndOpened);
-            return Theme(
-              data: ThemeData.light(useMaterial3: false).copyWith(
-                colorScheme: ColorScheme.fromSeed(
-                  seedColor: Colors.purpleAccent,
-                ),
-              ),
-              child: DesktopFlutoDialog(
-                pluginList: pluginList,
-                childNavigatorKey: childNavigatorKey,
-              ),
-            );
-          },
-        );
-      },
+bool kIsDesktop = Platform.isMacOS || Platform.isLinux || Platform.isWindows;
+Future<void> showFlutoBottomSheet(
+  BuildContext context,
+List<Pluggable> pluginList,
+) async {
+
+  if (kIsDesktop) {
+    await _showDesktopDialog(
+      context,
+      pluginList,
     );
-    return;
+  } else {
+    await _showMobileBottomSheet(
+      context,
+      pluginList,
+    );
   }
+}
 
-  showModalBottomSheet(
-    isDismissible: false,
-    enableDrag: false,
+Future<void> _showDesktopDialog(
+  BuildContext context,
+  List<Pluggable> pluginList,
+) async {
+  await showDialog(
     context: context,
-    builder: (BuildContext _) {
+    builder: (context) {
       return Builder(
-        builder: (BuildContext _) {
-          final provider = context.read<FlutoProvider>();
-          provider.setSheetState(PluginSheetState.clickedAndOpened);
+        builder: (context) {
           return Theme(
             data: ThemeData.light(useMaterial3: false).copyWith(
               colorScheme: ColorScheme.fromSeed(
                 seedColor: Colors.purpleAccent,
               ),
             ),
-            child: PopScope(
-              onPopInvoked: (_) async {
-                provider.setSheetState(PluginSheetState.closed);
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ListTile(
-                    title: const Text("Fluto Project"),
-                    trailing: IconButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        provider.setSheetState(PluginSheetState.closed);
-                      },
-                      icon: const Icon(Icons.close),
-                    ),
-                  ),
-                  const Divider(),
-                  Expanded(
-                    child: Visibility(
-                      visible: pluginList.isNotEmpty,
-                      replacement:
-                          const Center(child: Text("No Plugin Available")),
-                      child: GridView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        itemCount: pluginList.length,
-                        itemBuilder: (context, index) {
-                          final plugin = pluginList[index];
-
-                          return Card(
-                            clipBehavior: Clip.antiAlias,
-                            color: Color.alphaBlend(
-                              Theme.of(context).cardColor,
-                              Theme.of(context).secondaryHeaderColor,
-                            ),
-                            child: FlutoTile(plugin: plugin),
-                          );
-                        },
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            child: DesktopFlutoDialog(
+              pluginList: pluginList,
             ),
           );
         },
@@ -106,15 +46,90 @@ Future<void> showFlutoBottomSheet(BuildContext context) async {
   );
 }
 
+Future<void> _showMobileBottomSheet(
+  BuildContext context,
+  List<Pluggable> pluginList,
+) async {
+  await showModalBottomSheet(
+    isDismissible: false,
+    enableDrag: false,
+    context: context,
+    builder: (BuildContext _) {
+      return Builder(
+        builder: (BuildContext _) {
+          return Theme(
+            data: ThemeData.light(useMaterial3: false).copyWith(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.purpleAccent,
+              ),
+            ),
+            child: MobileFlutoDialog(
+              pluginList: pluginList,
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+class MobileFlutoDialog extends StatelessWidget {
+  const MobileFlutoDialog({super.key, required this.pluginList});
+
+  final List<Pluggable> pluginList;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          title: const Text("Fluto Project"),
+          trailing: IconButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: const Icon(Icons.close),
+          ),
+        ),
+        const Divider(),
+        Expanded(
+          child: Visibility(
+            visible: pluginList.isNotEmpty,
+            replacement: const Center(child: Text("No Plugin Available")),
+            child: GridView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              itemCount: pluginList.length,
+              itemBuilder: (context, index) {
+                final plugin = pluginList[index];
+
+                return Card(
+                  clipBehavior: Clip.antiAlias,
+                  color: Color.alphaBlend(
+                    Theme.of(context).cardColor,
+                    Theme.of(context).secondaryHeaderColor,
+                  ),
+                  child: FlutoTile(plugin: plugin),
+                );
+              },
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class DesktopFlutoDialog extends StatefulWidget {
   const DesktopFlutoDialog({
     super.key,
-    required this.childNavigatorKey,
     required this.pluginList,
   });
 
   final List<Pluggable> pluginList;
-  final GlobalKey<NavigatorState> childNavigatorKey;
 
   @override
   State<DesktopFlutoDialog> createState() => _DesktopFlutoDialogState();
@@ -123,99 +138,104 @@ class DesktopFlutoDialog extends StatefulWidget {
 class _DesktopFlutoDialogState extends State<DesktopFlutoDialog> {
   int selectedPluginIndex = 0;
 
+  final GlobalKey<NavigatorState> _childNavigatorKey =
+      GlobalKey<NavigatorState>();
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.pluginList.firstOrNull?.navigation.onLaunch();
-    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {
+        widget.pluginList.firstOrNull?.navigation.onLaunch(
+          _childNavigatorKey.currentContext!,
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      onPopInvoked: (_) async {
-        final provider = context.read<FlutoProvider>();
-        provider.setSheetState(PluginSheetState.closed);
-      },
-      child: Dialog(
-        insetPadding: const EdgeInsets.symmetric(
-          horizontal: 80.0,
-          vertical: 48.0,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ListTile(
-              title: const Text("Fluto Project"),
-              trailing: IconButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                icon: const Icon(Icons.close),
-              ),
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: 80.0,
+        vertical: 48.0,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            title: const Text("Fluto Project"),
+            trailing: IconButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.close),
             ),
-            const Divider(),
-            Expanded(
-              child: Visibility(
-                visible: widget.pluginList.isNotEmpty,
-                replacement: const Center(
-                  child: Text("No Plugin Available"),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 300,
-                      color: Colors.grey.shade800,
-                      child: ListView.builder(
-                        itemCount: widget.pluginList.length,
-                        itemBuilder: (context, index) {
-                          final plugin = widget.pluginList[index];
+          ),
+          const Divider(),
+          Expanded(
+            child: Visibility(
+              visible: widget.pluginList.isNotEmpty,
+              replacement: const Center(
+                child: Text("No Plugin Available"),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 300,
+                    color: Colors.grey.shade800,
+                    child: ListView.builder(
+                      itemCount: widget.pluginList.length,
+                      itemBuilder: (context, index) {
+                        final plugin = widget.pluginList[index];
 
-                          return Card(
-                            clipBehavior: Clip.antiAlias,
-                            child: ListTile(
-                              selected: selectedPluginIndex == index,
-                              onTap: () {
-                                if (selectedPluginIndex == index) {
-                                  return;
-                                }
-                                plugin.navigation.onLaunch.call();
-                                setState(() {
-                                  selectedPluginIndex = index;
-                                });
-                              },
-                              title: Text(
-                                plugin.pluginConfiguration.name,
-                              ),
-                              leading: Icon(
-                                plugin.pluginConfiguration.icon,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: Navigator(
-                        key: widget.childNavigatorKey,
-                        onGenerateRoute: (settings) {
-                          return MaterialPageRoute(
-                            builder: (context) {
-                              return const Center(
-                                child: Text("No Plugin Selected"),
+                        return Card(
+                          clipBehavior: Clip.antiAlias,
+                          child: ListTile(
+                            selected: selectedPluginIndex == index,
+                            onTap: () {
+                              // if (selectedPluginIndex == index) {
+                              //   return;
+                              // }
+
+                              plugin.navigation.onLaunch(
+                                _childNavigatorKey.currentContext!,
                               );
+
+                              setState(() {
+                                selectedPluginIndex = index;
+                              });
                             },
-                          );
-                        },
-                      ),
+                            title: Text(
+                              plugin.pluginConfiguration.name,
+                            ),
+                            leading: Icon(
+                              plugin.pluginConfiguration.icon,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  ],
-                ),
+                  ),
+                  Expanded(
+                    child: Navigator(
+                      key: _childNavigatorKey,
+                      onGenerateRoute: (settings) {
+                        return MaterialPageRoute(
+                          builder: (context) {
+                            return const Center(
+                              child: Text("No Plugin Selected"),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -233,7 +253,7 @@ class FlutoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        plugin.navigation.onLaunch.call();
+        plugin.navigation.onLaunch.call(context);
       },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
