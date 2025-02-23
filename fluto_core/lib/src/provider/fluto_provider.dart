@@ -41,8 +41,6 @@ class FlutoController with UiEffectsCallbackMixin<FlutoEvent> {
   }
 }
 
-enum PluginSheetState { clicked, clickedAndOpened, closed }
-
 typedef ValueSetter<T> = void Function(T value);
 
 mixin UiEffectsCallbackMixin<E> {
