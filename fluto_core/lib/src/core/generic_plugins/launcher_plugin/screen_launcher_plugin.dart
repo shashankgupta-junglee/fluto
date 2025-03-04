@@ -24,7 +24,7 @@ class ScreenLauncherPlugin extends Pluggable {
 
   @override
   Navigation get navigation => Navigation.byScreen(
-        globalContext: context!,
+        // globalContext: context!,
         screen: screen,
       );
 
@@ -46,7 +46,7 @@ class InternalStoragePlugin extends Pluggable {
 
   @override
   Navigation get navigation => Navigation.byScreen(
-        globalContext: context!,
+        // globalContext: context!,
         screen: StorageView(
           storageViewerController: _provider,
         ),
@@ -70,7 +70,7 @@ class ChangeFlavourPlugin extends Pluggable {
   final ChangeFlavourConfig config;
   @override
   Navigation get navigation => Navigation.byScreen(
-        globalContext: context!,
+        // globalContext: context!,
         screen: ChangeFlavourScreen(
           router: router,
           config: config,
@@ -93,7 +93,7 @@ class ChangeLocationPlugin extends Pluggable {
 
   @override
   Navigation get navigation => Navigation.byScreen(
-        globalContext: context!,
+        // globalContext: context!,
         screen: ChangeLocationScreen(
           router: router,
         ),

@@ -4,6 +4,8 @@ import 'package:fluto_core/fluto.dart';
 import 'package:flutter/material.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fluto_core/src/provider/fluto_provider.dart';
+
 
 final GlobalKey<NavigatorState> globalNavigatorKey =
     GlobalKey<NavigatorState>();
@@ -11,17 +13,17 @@ final GlobalKey<NavigatorState> globalNavigatorKey =
 void main(
   List<String> args,
 ) async {
-  WidgetsFlutterBinding.ensureInitialized(); 
+  WidgetsFlutterBinding.ensureInitialized();
 
   final sharedPref = await SharedPreferences.getInstance();
-  runFlutoApp(
-    child: MyApp(
+  runApp(
+    MyApp(
       sharedPreferences: sharedPref,
     ),
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({
     super.key,
     required this.sharedPreferences,
@@ -30,23 +32,32 @@ class MyApp extends StatelessWidget {
   final SharedPreferences sharedPreferences;
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final FlutoController controller = FlutoController(
+    globalNavigatorKey: globalNavigatorKey,
+    pluginList: [
+      InternalStoragePlugin(
+        storageDriver: SharedPreferencesDriver(widget.sharedPreferences,),
+      ),
+    ],
+  );
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       navigatorKey: globalNavigatorKey,
       theme: ThemeData.dark(),
-      home: Builder(
-        builder: (context) => Fluto(
-          globalNavigatorKey: globalNavigatorKey,
-          pluginList: [
-            InternalStoragePlugin(
-              storageDriver: SharedPreferencesDriver(sharedPreferences),
-            ),
-          ],
-          child: const HomePage(),
-        ),
-      ),
+      builder: (ctx, child){
+        return Fluto(
+          controller: controller,
+          child: child!,
+        );
+      },
+      home: const HomePage(),
     );
   }
 }
-

@@ -21,46 +21,46 @@ class _HomePageState extends State<HomePage> {
             const Padding(padding: EdgeInsets.all(10)),
             ElevatedButton(
               onPressed: () {
-                FlutoLogModel.log(
-                  "This is an informational log",
-                  logType: FlutoLogType.info,
-                );
+                // FlutoLogModel.log(
+                //   "This is an informational log",
+                //   logType: FlutoLogType.info,
+                // );
               },
               child: const Text("Generate Info Log"),
             ),
             ElevatedButton(
               onPressed: () {
-                FlutoLogModel.log(
-                  "This is a warning log",
-                  logType: FlutoLogType.warning,
-                );
+                // FlutoLogModel.log(
+                //   "This is a warning log",
+                //   logType: FlutoLogType.warning,
+                // );
               },
               child: const Text("Generate Warning Log"),
             ),
             ElevatedButton(
               onPressed: () {
-                FlutoLogModel.log(
-                  "This is an error log",
-                  logType: FlutoLogType.error,
-                );
+                // FlutoLogModel.log(
+                //   "This is an error log",
+                //   logType: FlutoLogType.error,
+                // );
               },
               child: const Text("Generate Error Log"),
             ),
             ElevatedButton(
               onPressed: () {
-                FlutoLogModel.log(
-                  "This is a debug log",
-                  logType: FlutoLogType.debug,
-                );
+                // FlutoLogModel.log(
+                //   "This is a debug log",
+                //   logType: FlutoLogType.debug,
+                // );
               },
               child: const Text("Generate Debug Log"),
             ),
             ElevatedButton(
               onPressed: () {
-                FlutoLogModel.log(
-                  "This is a success log",
-                  logType: FlutoLogType.info,
-                );
+                // FlutoLogModel.log(
+                //   "This is a success log",
+                //   logType: FlutoLogType.info,
+                // );
               },
               child: const Text("Generate Success Log"),
             ),
@@ -86,12 +86,12 @@ class _HomePageState extends State<HomePage> {
                   List<int> numbers = [1, 2, 3];
                   print(numbers[5]); // Index out of range
                 } catch (e, stackTrace) {
-                  FlutoLogModel.log(
-                    "Caught an index error: $e",
-                    logType: FlutoLogType.error,
-                    error: e,
-                    stackTrace: stackTrace,
-                  );
+                  // FlutoLogModel.log(
+                  //   "Caught an index error: $e",
+                  //   logType: FlutoLogType.error,
+                  //   error: e,
+                  //   stackTrace: stackTrace,
+                  // );
                 }
               },
               child: const Text("Trigger Index Error"),
@@ -102,10 +102,10 @@ class _HomePageState extends State<HomePage> {
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setString("test_key", "Hello, SharedPreferences!");
 
-                FlutoLogModel.log(
-                  "Saved value in SharedPreferences: Hello, SharedPreferences!",
-                  logType: FlutoLogType.info,
-                );
+                // FlutoLogModel.log(
+                //   "Saved value in SharedPreferences: Hello, SharedPreferences!",
+                //   logType: FlutoLogType.info,
+                // );
               },
               child: const Text("Set SharedPreferences Value"),
             ),
@@ -114,10 +114,10 @@ class _HomePageState extends State<HomePage> {
                 final prefs = await SharedPreferences.getInstance();
                 final value = prefs.getString("test_key") ?? "No Value Found";
 
-                FlutoLogModel.log(
-                  "Retrieved value from SharedPreferences: $value",
-                  logType: FlutoLogType.info,
-                );
+                // FlutoLogModel.log(
+                //   "Retrieved value from SharedPreferences: $value",
+                //   logType: FlutoLogType.info,
+                // );
 
                 showDialog(
                   context: context,
