@@ -29,12 +29,12 @@ class NetworkInspectorPlugin extends Pluggable {
 }
 
 class NetworkInspectorPluginController {
-  FlutoNetworkStorage? networkStorage;
+  NetworkStorage? networkStorage;
   NetworkCallInterceptor? interceptor;
 
   void init() async {
     final LazyBox box = await Hive.openLazyBox('NetworkProvider');
-    networkStorage = FlutoNetworkStorage(box: box);
+    networkStorage = NetworkStorage(FlutoNetworkLazyBox(box));
     await networkStorage?.init();
     interceptor = NetworkCallInterceptor.init(networkStorage!);
   }
