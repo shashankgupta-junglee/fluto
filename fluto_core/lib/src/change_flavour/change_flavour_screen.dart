@@ -43,20 +43,26 @@ class _ChangeFlavourScreenState extends State<ChangeFlavourScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 20),
-              FutureBuilder(
-                future: widget.router.getValue(widget.config.enableFlavourKey),
-                builder: (context, snapshot) {
-                  final bool isEnabled = snapshot.data == "true";
-                  return Switch.adaptive(
-                    value: isEnabled,
-                    onChanged: (bool value) async {
-                      await _setValue(
-                        widget.config.enableFlavourKey,
-                        value.toString(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Enable/Disable Flavours"),
+                  FutureBuilder(
+                    future: widget.router.getValue(widget.config.enableFlavourKey),
+                    builder: (context, snapshot) {
+                      final bool isEnabled = snapshot.data == "true";
+                      return Switch.adaptive(
+                        value: isEnabled,
+                        onChanged: (bool value) async {
+                          await _setValue(
+                            widget.config.enableFlavourKey,
+                            value.toString(),
+                          );
+                        },
                       );
                     },
-                  );
-                },
+                  ),
+                ],
               ),
               const Text(
                 "Change ENV/FLAVOUR",
