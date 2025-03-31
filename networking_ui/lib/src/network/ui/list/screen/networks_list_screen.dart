@@ -18,81 +18,99 @@ class NetworksListScreen extends StatefulWidget {
 }
 
 class _NetworksListScreenState extends State<NetworksListScreen> {
-  late NetworkFilters _networkFilters;
+  late final NetworkFilters _networkFilters;
 
   @override
   void initState() {
-    _networkFilters = NetworkFilters(networkCallsGetter: () => widget.storage.networkCall);
-    widget.storage.addListener(_listener);
     super.initState();
+    _networkFilters = NetworkFilters(networkCallsGetter: () => widget.storage.networkCalls);
+    widget.storage.networkCall.addListener(_onNetworkCallsChanged);
   }
 
-  void _listener() => setState(() {});
+  void _onNetworkCallsChanged() {
+    setState(() {});
+  }
+
   @override
   void dispose() {
-    widget.storage.removeListener(_listener);
+    widget.storage.networkCall.removeListener(_onNetworkCallsChanged);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: _networkFilters.selectedMethods.isNotEmpty
-            ? Size.fromHeight(kToolbarHeight + 5 + (Platform.isMacOS ? 25 : 0))
-            : Size.fromHeight(kToolbarHeight),
-        child: ListenableBuilder(
-          listenable: _networkFilters,
-          builder: (context, child) {
-            return NetworkCallAppBar(
-              onClearLogs: () => widget.storage.clear(),
-              filters: _networkFilters,
-              hasBottom: _networkFilters.selectedMethods.isNotEmpty,
-            );
-          },
-        ),
-      ),
-      body: NetworkListBody(filters: _networkFilters),
+      appBar: _buildAppBar(),
+      body: _buildBody(),
     );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    final bool hasFilters = _networkFilters.selectedMethods.isNotEmpty;
+    
+    return PreferredSize(
+      preferredSize: hasFilters 
+          ? Size.fromHeight(kToolbarHeight + 5 + (Platform.isMacOS ? 25 : 0))
+          : Size.fromHeight(kToolbarHeight),
+      child: ListenableBuilder(
+        listenable: _networkFilters,
+        builder: (context, _) {
+          return NetworkCallAppBar(
+            filters: _networkFilters,
+            hasBottom: _networkFilters.selectedMethods.isNotEmpty,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    return NetworkListBody(filters: _networkFilters);
   }
 }
 
 class NetworkListBody extends StatelessWidget {
-  const NetworkListBody({super.key, required this.filters});
+  const NetworkListBody({
+    super.key,
+    required this.filters,
+  });
+  
   final NetworkFilters filters;
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: filters,
-      builder: (context, child) {
+      builder: (context, _) {
         final filteredCalls = filters.filteredCalls;
-        return Visibility(
-          visible: filteredCalls.isNotEmpty,
-          replacement: const Center(child: Text("No network calls")),
-          child: ListView.builder(
-            itemCount: filteredCalls.length,
-            itemBuilder: (context, index) {
-              return NetworkCallItem(
-                networkCall: filteredCalls.elementAt(index),
-                searchedText: filters.query,
-                onItemClicked: (InfospectNetworkCall call) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return BlocProvider(
-                          create: (_) => InterceptorDetailsBloc(),
-                          child: InterceptorDetailsScreen(call),
-                        );
-                      },
-                    ),
-                  );
-                },
-              );
-            },
-          ),
+        
+        if (filteredCalls.isEmpty) {
+          return const Center(child: Text("No network calls"));
+        }
+        
+        return ListView.builder(
+          itemCount: filteredCalls.length,
+          itemBuilder: (context, index) {
+            final call = filteredCalls.elementAt(index);
+            return NetworkCallItem(
+              networkCall: call,
+              searchedText: filters.query,
+              onItemClicked: (call) => _navigateToDetails(context, call),
+            );
+          },
         );
       },
+    );
+  }
+
+  void _navigateToDetails(BuildContext context, InfospectNetworkCall call) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BlocProvider(
+          create: (_) => InterceptorDetailsBloc(),
+          child: InterceptorDetailsScreen(call),
+        ),
+      ),
     );
   }
 }

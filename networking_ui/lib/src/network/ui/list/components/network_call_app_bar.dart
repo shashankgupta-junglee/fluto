@@ -1,14 +1,11 @@
 import '../../common_widgets/action_widget.dart';
-import '../../common_widgets/app_adaptive_dialog.dart';
 import '../../common_widgets/app_search_bar.dart';
 import '/src/network/ui/filters/network_filters.dart';
 import 'package:flutter/material.dart';
 
-
 enum NetworkActionType {
   method,
   status,
-  share,
   clear,
 }
 
@@ -65,10 +62,6 @@ abstract class NetworkAction {
     return ActionModel(
       icon: Icons.more_vert,
       actions: const [
-        // PopupAction(
-        //   id: NetworkActionType.share,
-        //   name: "Share",
-        // ),
         PopupAction(
           id: NetworkActionType.clear,
           name: "Clear",
@@ -79,14 +72,22 @@ abstract class NetworkAction {
 }
 
 class NetworkCallAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const NetworkCallAppBar({super.key, this.hasBottom = false, required this.filters, required this.onClearLogs,}) : isDesktop = false;
+  const NetworkCallAppBar({
+    super.key,
+    this.hasBottom = false,
+    required this.filters,
+  }) : isDesktop = false;
 
-  const NetworkCallAppBar.desktop({super.key, this.hasBottom = false, required this.filters, required this.onClearLogs,}) : isDesktop = true;
+  const NetworkCallAppBar.desktop({
+    super.key,
+    this.hasBottom = false,
+    required this.filters,
+  }) : isDesktop = true;
 
   final bool hasBottom;
   final bool isDesktop;
   final NetworkFilters filters;
-  final VoidCallback onClearLogs;
+  // final VoidCallback onClearLogs;
 
   @override
   State<NetworkCallAppBar> createState() => _NetworkCallAppBarState();
@@ -112,8 +113,6 @@ class _NetworkCallAppBarState extends State<NetworkCallAppBar> {
 
   @override
   Widget build(BuildContext context) {
-    // final networkListBloc = context.read<NetworksListBloc>();
-
     return AppBar(
       automaticallyImplyLeading: false,
       elevation: 0,
@@ -133,34 +132,10 @@ class _NetworkCallAppBarState extends State<NetworkCallAppBar> {
           onPressed: _openSheet,
           icon: const Icon(Icons.filter_alt_outlined),
         ),
-        // AppBarActionWidget(
-        //   actionModel: NetworkAction.filterModel,
-        //   // selectedActions: networkListBloc.state.filters,
-
-        //   onItemSelected: (value) {
-        //     // networkListBloc.add(NetworkLogsFilterAdded(action: value));
-        //   },
-        //   // selected: networkListBloc.state.filters.isNotEmpty,
-        // ),
-        AppBarActionWidget<NetworkActionType>(
-          actionModel: NetworkAction.menuModel,
-          onItemSelected: (value) {
-            if (value.id == NetworkActionType.share) {
-              // networkListBloc.add(const ShareNetworkLogsClicked());
-            } else if (value.id == NetworkActionType.clear) {
-              AppAdaptiveDialog.show(
-                context,
-                tag: 'network_calls',
-                title: 'Clear Network Call Logs?',
-                body: 'Are you sure you want to clear all network call logs? This will clear up the list.',
-                onPositiveActionClick: widget.onClearLogs,
-              );
-            }
-          },
-        ),
       ],
       bottom: PreferredSize(
-        preferredSize: Size.fromHeight(widget.filters.selectedMethods.isNotEmpty ? 30 : 0),
+        preferredSize:
+            Size.fromHeight(widget.filters.selectedMethods.isNotEmpty ? 30 : 0),
         child: Visibility(
           visible: widget.filters.selectedMethods.isNotEmpty,
           child: Padding(
@@ -178,7 +153,6 @@ class _NetworkCallAppBarState extends State<NetworkCallAppBar> {
           ),
         ),
       ),
-      // bottom: widget.hasBottom ? _BottomWidget(widget.isDesktop) : null,
     );
   }
 
@@ -191,77 +165,6 @@ class _NetworkCallAppBarState extends State<NetworkCallAppBar> {
   }
 }
 
-// class _BottomWidget extends StatelessWidget implements PreferredSizeWidget {
-//   const _BottomWidget(this.isDesktop);
-
-//   final bool isDesktop;
-
-//   @override
-//   Size get preferredSize => const Size.fromHeight(30);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return BlocSelector<NetworksListBloc, NetworksListState, List<PopupAction>>(
-//       selector: (state) {
-//         return state.filters;
-//       },
-//       builder: (context, filters) {
-//         return LayoutBuilder(
-//           builder: (context, constraints) {
-//             return SizedBox(
-//               width: constraints.maxWidth - 10,
-//               child: SingleChildScrollView(
-//                 scrollDirection: Axis.horizontal,
-//                 child: Row(
-//                   children: filters.map(
-//                     (e) {
-//                       return ConditionalWidget(
-//                         condition: isDesktop,
-//                         ifTrue: Transform(
-//                           transform: Matrix4.identity()..scale(0.8),
-//                           child: chipWidget(e, context),
-//                         ),
-//                         ifFalse: chipWidget(e, context),
-//                       );
-//                     },
-//                   ).toList(),
-//                 ),
-//               ),
-//             );
-//           },
-//         );
-//       },
-//     );
-//   }
-
-//   Padding chipWidget(PopupAction<dynamic> e, BuildContext context) {
-//     return Padding(
-//       padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 8),
-//       child: Chip(
-//         label: Text(e.name),
-//         deleteIcon: Container(
-//           height: 14,
-//           width: 14,
-//           decoration: BoxDecoration(
-//             color: Theme.of(context).colorScheme.primary,
-//             border: Border.all(),
-//             shape: BoxShape.circle,
-//           ),
-//           child: const Icon(Icons.close_rounded, size: 12),
-//         ),
-//         labelPadding: const EdgeInsetsDirectional.only(
-//           start: 4,
-//         ),
-//         onDeleted: () {
-//           context.read<NetworksListBloc>().add(
-//                 NetworkLogsFilterRemoved(action: e),
-//               );
-//         },
-//       ),
-//     );
-//   }
-// }
-
 class _MethodsListView extends StatelessWidget {
   const _MethodsListView({
     required this.onTap,
@@ -273,7 +176,13 @@ class _MethodsListView extends StatelessWidget {
   final ValueChanged<String> onRemove;
   final Iterable<String> selectedMethods;
 
-  static const List<String> methodsList = ['GET', 'POST', 'PUT', 'DELETE', 'OPTION'];
+  static const List<String> methodsList = [
+    'GET',
+    'POST',
+    'PUT',
+    'DELETE',
+    'OPTION'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -403,7 +312,8 @@ class _FilterTile extends StatelessWidget {
 
     if (isActive) {
       textColor = Theme.of(context).colorScheme.surface;
-      backgroundColor = Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).colorScheme.primary;
+      backgroundColor = Theme.of(context).appBarTheme.backgroundColor ??
+          Theme.of(context).colorScheme.primary;
 
       if (activeTextColor != null) {
         textColor = activeTextColor!;
@@ -442,7 +352,6 @@ class _FilterTile extends StatelessWidget {
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            // color: isActive ? Theme.of(context).appBarTheme.backgroundColor : Theme.of(context).colorScheme.surface,
             color: backgroundColor,
             border: Border.all(color: Theme.of(context).colorScheme.onSurface),
             borderRadius: BorderRadius.circular(50),

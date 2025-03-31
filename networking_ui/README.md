@@ -1,39 +1,95 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# Networking UI
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages). 
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages). 
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+A Flutter package that provides a UI for inspecting network calls in your application. This package is part of the Fluto framework and helps developers debug and monitor network activity in their Flutter apps.
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- **Network Call Interception**: Automatically intercept and record HTTP requests and responses
+- **Interactive UI**: Browse, filter, and inspect network calls in a user-friendly interface
+- **Request/Response Details**: View headers, body content, and timing information
+- **Filtering**: Filter network calls by HTTP method (GET, POST, PUT, DELETE, etc.)
+- **Search**: Search through network calls by URL or content
+- **Plugin Architecture**: Can be integrated with Fluto framework as a plugin
 
-## Getting started
+## Getting Started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+To use this package, add `networking_ui` as a dependency in your `pubspec.yaml` file.
+
+```yaml
+dependencies:
+  networking_ui:
+    path: path/to/networking_ui
+  # If using from pub.dev once published
+  # networking_ui: ^1.0.0
+```
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
+### Basic Setup
+
+1. Initialize the NetworkInspectorPluginController:
 
 ```dart
-const like = 'sample';
+final NetworkInspectorPluginController controller = NetworkInspectorPluginController();
+await controller.init();
 ```
 
-## Additional information
+2. Access the network inspector UI:
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+```dart
+Navigator.of(context).push(
+  MaterialPageRoute(
+    builder: (context) => NetworksListScreen(
+      storage: controller.networkStorage!,
+    ),
+  ),
+);
+```
+
+### As a Fluto Plugin
+
+If you're using the Fluto framework, you can register this as a plugin:
+
+```dart
+final networkController = NetworkInspectorPluginController();
+await networkController.init();
+
+final plugin = NetworkInspectorPlugin(controller: networkController);
+// Register plugin with Fluto
+```
+
+## Example
+
+Check out the [example](./example) folder for a complete example application demonstrating how to use this package.
+
+The example shows:
+- How to initialize the network inspector
+- Making different types of HTTP requests
+- Displaying and filtering network calls in the inspector UI
+
+## Implementation Details
+
+The package consists of:
+
+1. **Network Call Interceptor**: Intercepts HTTP requests and responses
+2. **Network Storage**: Stores network call data
+3. **UI Components**: 
+   - NetworksListScreen: Main screen showing the list of network calls
+   - InterceptorDetailsScreen: Detailed view of a single network call
+   - Filtering and search functionality
+
+## Additional Information
+
+### Compatibility
+
+Works with Flutter stable channel and requires Dart SDK ^3.5.1.
+
+### Dependencies
+
+- flutter_bloc: For state management
+- equatable: For value equality comparisons
+- http: For HTTP requests support
+
+### Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
