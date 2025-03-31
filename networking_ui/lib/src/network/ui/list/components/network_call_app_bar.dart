@@ -1,15 +1,19 @@
 import '../../common_widgets/action_widget.dart';
 import '../../common_widgets/app_search_bar.dart';
-import '/src/network/ui/filters/network_filters.dart';
+import '/src/network/ui/list/cubit/network_list_screen_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Enum representing the types of network actions available
 enum NetworkActionType {
   method,
   status,
   clear,
 }
 
-abstract class NetworkAction {
+/// Abstract class providing action models for network operations
+class NetworkAction {
+  /// Creates a filter action model with method and status filters
   static ActionModel get filterModel {
     return ActionModel(
       icon: Icons.filter_alt_outlined,
@@ -18,46 +22,26 @@ abstract class NetworkAction {
           id: NetworkActionType.method,
           name: "Method",
           subActions: [
-            PopupAction(
-              id: 'get',
-              name: "GET",
-            ),
-            PopupAction(
-              id: 'post',
-              name: "POST",
-            ),
-            PopupAction(
-              id: 'put',
-              name: "PUT",
-            ),
-            PopupAction(
-              id: 'delete',
-              name: "DELETE",
-            ),
-            PopupAction(
-              id: 'option',
-              name: "OPTION",
-            ),
+            PopupAction(id: 'get', name: "GET"),
+            PopupAction(id: 'post', name: "POST"),
+            PopupAction(id: 'put', name: "PUT"),
+            PopupAction(id: 'delete', name: "DELETE"),
+            PopupAction(id: 'option', name: "OPTION"),
           ],
         ),
         PopupAction(
           id: NetworkActionType.status,
           name: "Status",
           subActions: [
-            PopupAction(
-              id: 'success',
-              name: "Success",
-            ),
-            PopupAction(
-              id: 'error',
-              name: "Error",
-            ),
+            PopupAction(id: 'success', name: "Success"),
+            PopupAction(id: 'error', name: "Error"),
           ],
         ),
       ],
     );
   }
 
+  /// Creates a menu action model with options like Clear
   static ActionModel<NetworkActionType> get menuModel {
     return ActionModel(
       icon: Icons.more_vert,
@@ -71,23 +55,25 @@ abstract class NetworkAction {
   }
 }
 
+/// AppBar widget for the network call list screen
 class NetworkCallAppBar extends StatefulWidget implements PreferredSizeWidget {
+  /// Constructor for mobile version
   const NetworkCallAppBar({
     super.key,
     this.hasBottom = false,
-    required this.filters,
+    required this.cubit,
   }) : isDesktop = false;
 
+  /// Constructor for desktop version
   const NetworkCallAppBar.desktop({
     super.key,
     this.hasBottom = false,
-    required this.filters,
+    required this.cubit,
   }) : isDesktop = true;
 
   final bool hasBottom;
   final bool isDesktop;
-  final NetworkFilters filters;
-  // final VoidCallback onClearLogs;
+  final NetworkListScreenCubit cubit;
 
   @override
   State<NetworkCallAppBar> createState() => _NetworkCallAppBarState();
@@ -103,12 +89,14 @@ class _NetworkCallAppBarState extends State<NetworkCallAppBar> {
   late final FocusNode _focusNode = FocusNode();
 
   @override
-  void initState() {
-    super.initState();
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
   }
 
   void _openSheet() {
-    FiltersBottomSheet.open(context, widget.filters);
+    FiltersBottomSheet.open(context, widget.cubit);
   }
 
   @override
@@ -116,55 +104,59 @@ class _NetworkCallAppBarState extends State<NetworkCallAppBar> {
     return AppBar(
       automaticallyImplyLeading: false,
       elevation: 0,
-      leading: widget.isDesktop
-          ? null
-          : BackButton(
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-      title: AppSearchBar(
-        controller: _controller,
-        focusNode: _focusNode,
-        isDesktop: widget.isDesktop,
-        onChanged: widget.filters.onQueryChanged,
-      ),
-      actions: [
-        IconButton(
-          onPressed: _openSheet,
-          icon: const Icon(Icons.filter_alt_outlined),
-        ),
-      ],
-      bottom: PreferredSize(
-        preferredSize:
-            Size.fromHeight(widget.filters.selectedMethods.isNotEmpty ? 30 : 0),
-        child: Visibility(
-          visible: widget.filters.selectedMethods.isNotEmpty,
+      leading: _buildLeading(),
+      title: _buildSearchBar(),
+      actions: _buildActions(),
+      bottom: widget.cubit.state.selectedMethods.isEmpty
+          ? const PreferredSize(
+          preferredSize: Size.fromHeight(0),
+          child: SizedBox.shrink(),
+        )
+          : PreferredSize(
+          preferredSize: const Size.fromHeight(30),
           child: Padding(
             padding: const EdgeInsets.only(bottom: 10, left: 10, right: 10),
-            child: ListenableBuilder(
-              listenable: widget.filters,
-              builder: (context, child) {
-                return _AppliedMethodsListView(
-                  onTap: widget.filters.onMethodSelected,
-                  selectedMethods: widget.filters.selectedMethods,
-                  onRemove: widget.filters.onMethodRemoved,
-                );
-              },
+            child: _AppliedMethodsListView(
+          onTap: widget.cubit.onMethodSelected,
+          selectedMethods: widget.cubit.state.selectedMethods,
+          onRemove: widget.cubit.onMethodRemoved,
             ),
           ),
         ),
-      ),
     );
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focusNode.dispose();
+  /// Build the leading widget (back button on mobile)
+  Widget? _buildLeading() {
+    if (widget.isDesktop) return null;
 
-    super.dispose();
+    return BackButton(
+      onPressed: () => Navigator.of(context).pop(),
+    );
+  }
+
+  /// Build the search bar widget
+  Widget _buildSearchBar() {
+    return AppSearchBar(
+      controller: _controller,
+      focusNode: _focusNode,
+      isDesktop: widget.isDesktop,
+      onChanged: widget.cubit.onQueryChanged,
+    );
+  }
+
+  /// Build the action buttons
+  List<Widget> _buildActions() {
+    return [
+      IconButton(
+        onPressed: _openSheet,
+        icon: const Icon(Icons.filter_alt_outlined),
+      ),
+    ];
   }
 }
 
+/// Widget displaying available method filters in a horizontal list
 class _MethodsListView extends StatelessWidget {
   const _MethodsListView({
     required this.onTap,
@@ -174,7 +166,7 @@ class _MethodsListView extends StatelessWidget {
 
   final ValueChanged<String> onTap;
   final ValueChanged<String> onRemove;
-  final Iterable<String> selectedMethods;
+  final Set<String> selectedMethods;
 
   static const List<String> methodsList = [
     'GET',
@@ -189,7 +181,7 @@ class _MethodsListView extends StatelessWidget {
     return SizedBox(
       height: 30,
       child: ListView.separated(
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
         scrollDirection: Axis.horizontal,
         itemCount: methodsList.length,
         itemBuilder: (context, index) {
@@ -206,6 +198,7 @@ class _MethodsListView extends StatelessWidget {
   }
 }
 
+/// Widget displaying currently applied method filters
 class _AppliedMethodsListView extends StatelessWidget {
   const _AppliedMethodsListView({
     required this.onTap,
@@ -215,14 +208,14 @@ class _AppliedMethodsListView extends StatelessWidget {
 
   final ValueChanged<String> onTap;
   final ValueChanged<String> onRemove;
-  final Iterable<String> selectedMethods;
+  final Set<String> selectedMethods;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 30,
       child: ListView.separated(
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
         scrollDirection: Axis.horizontal,
         itemCount: selectedMethods.length,
         itemBuilder: (context, index) {
@@ -241,15 +234,18 @@ class _AppliedMethodsListView extends StatelessWidget {
   }
 }
 
+/// Bottom sheet for selecting filters
 class FiltersBottomSheet extends StatelessWidget {
   const FiltersBottomSheet({
     super.key,
-    required this.filters,
+    required this.cubit,
   });
 
-  final NetworkFilters filters;
+  final NetworkListScreenCubit cubit;
 
-  static Future<void> open(BuildContext context, NetworkFilters filters) async {
+  /// Open the filters bottom sheet
+  static Future<void> open(
+      BuildContext context, NetworkListScreenCubit cubit) async {
     await showModalBottomSheet(
       enableDrag: true,
       shape: const RoundedRectangleBorder(
@@ -257,7 +253,7 @@ class FiltersBottomSheet extends StatelessWidget {
       ),
       context: context,
       builder: (context) {
-        return FiltersBottomSheet(filters: filters);
+        return FiltersBottomSheet(cubit: cubit);
       },
     );
   }
@@ -271,13 +267,13 @@ class FiltersBottomSheet extends StatelessWidget {
         children: [
           Text('Method', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 10),
-          ListenableBuilder(
-            listenable: filters,
-            builder: (context, child) {
+          BlocBuilder<NetworkListScreenCubit, NetworkListScreenState>(
+            bloc: cubit, // Directly specify the cubit
+            builder: (context, state) {
               return _MethodsListView(
-                onTap: filters.onMethodSelected,
-                selectedMethods: filters.selectedMethods,
-                onRemove: filters.onMethodRemoved,
+                onTap: cubit.onMethodSelected,
+                selectedMethods: state.selectedMethods,
+                onRemove: cubit.onMethodRemoved,
               );
             },
           ),
@@ -287,6 +283,7 @@ class FiltersBottomSheet extends StatelessWidget {
   }
 }
 
+/// Individual filter tile widget
 class _FilterTile extends StatelessWidget {
   const _FilterTile({
     required this.title,
@@ -306,59 +303,64 @@ class _FilterTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget child = Text(title);
-    Color textColor = Theme.of(context).colorScheme.onSurface;
-    Color backgroundColor = Theme.of(context).colorScheme.surface;
+    final themeData = Theme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        alignment: Alignment.topLeft,
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: _buildDecoration(themeData),
+          child: _buildContent(themeData),
+        ),
+      ),
+    );
+  }
+
+  /// Build the container decoration based on state
+  BoxDecoration _buildDecoration(ThemeData themeData) {
+    Color backgroundColor = themeData.colorScheme.surface;
 
     if (isActive) {
-      textColor = Theme.of(context).colorScheme.surface;
-      backgroundColor = Theme.of(context).appBarTheme.backgroundColor ??
-          Theme.of(context).colorScheme.primary;
+      backgroundColor = activeBackgroundColor ??
+          themeData.appBarTheme.backgroundColor ??
+          themeData.colorScheme.primary;
+    }
 
-      if (activeTextColor != null) {
-        textColor = activeTextColor!;
-      }
+    return BoxDecoration(
+      color: backgroundColor,
+      border: Border.all(color: themeData.colorScheme.onSurface),
+      borderRadius: BorderRadius.circular(50),
+    );
+  }
 
-      child = Row(
+  /// Build the tile content based on active state
+  Widget _buildContent(ThemeData themeData) {
+    Color textColor = themeData.colorScheme.onSurface;
+
+    if (isActive) {
+      textColor = activeTextColor ?? themeData.colorScheme.surface;
+
+      return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            title,
-            style: TextStyle(color: textColor),
-          ),
+          Text(title, style: TextStyle(color: textColor)),
           InkWell(
             onTap: onRemove,
             child: Icon(
+              Icons.close_rounded,
               size: 16,
               color: textColor,
-              Icons.close_rounded,
             ),
           ),
         ],
       );
     }
 
-    if (activeBackgroundColor != null) {
-      backgroundColor = activeBackgroundColor!;
-    }
-
-    return InkWell(
-      onTap: onTap,
-      child: AnimatedSize(
-        duration: Duration(milliseconds: 200),
-        alignment: Alignment.topLeft,
-        child: Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            border: Border.all(color: Theme.of(context).colorScheme.onSurface),
-            borderRadius: BorderRadius.circular(50),
-          ),
-          child: child,
-        ),
-      ),
-    );
+    return Text(title);
   }
 }

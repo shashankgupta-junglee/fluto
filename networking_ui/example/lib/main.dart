@@ -162,7 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => NetworksListScreen(
-          storage: _networkController,
+          dataRouter: _networkController,
         ),
       ),
     );

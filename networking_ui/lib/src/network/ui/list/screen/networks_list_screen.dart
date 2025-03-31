@@ -2,102 +2,92 @@ import '/src/network/infospect_network_call.dart';
 import '/src/network/network_storage.dart';
 import '/src/network/ui/details/bloc/interceptor_details_bloc.dart';
 import '/src/network/ui/details/screen/interceptor_details_screen.dart';
-import '/src/network/ui/filters/network_filters.dart';
 import '/src/network/ui/list/components/network_call_item.dart';
+import '/src/network/ui/list/cubit/network_list_screen_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../components/network_call_app_bar.dart';
 import 'dart:io';
 
-class NetworksListScreen extends StatefulWidget {
-  const NetworksListScreen({super.key, required this.storage});
-  final NetworkInspectorRouter storage;
+/// Screen that displays a list of network calls with filtering capabilities.
+class NetworksListScreen extends StatelessWidget {
+  NetworksListScreen({
+    super.key,
+    required this.dataRouter,
+  });
+  final NetworkInspectorRouter dataRouter;
 
-  @override
-  State<NetworksListScreen> createState() => _NetworksListScreenState();
-}
-
-class _NetworksListScreenState extends State<NetworksListScreen> {
-  late final NetworkFilters _networkFilters;
-
-  @override
-  void initState() {
-    super.initState();
-    _networkFilters = NetworkFilters(networkCallsGetter: () => widget.storage.networkCall.value.values.toSet());
-    widget.storage.networkCall.addListener(_onNetworkCallsChanged);
-  }
-
-  void _onNetworkCallsChanged() {
-    setState(() {});
-  }
-
-  @override
-  void dispose() {
-    widget.storage.networkCall.removeListener(_onNetworkCallsChanged);
-    super.dispose();
-  }
+  late final NetworkListScreenCubit _cubit = NetworkListScreenCubit(
+    storage: dataRouter,
+  );
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(),
-      body: _buildBody(),
+    return BlocBuilder<NetworkListScreenCubit, NetworkListScreenState>(
+      bloc: _cubit,
+      builder: (context, state) {
+        return Scaffold(
+          appBar: _buildAppBar(context),
+          body: state.filteredCalls.isEmpty
+              ? const _EmptyStateView()
+              : _NetworkCallsListView(
+                  filteredCalls: state.filteredCalls,
+                  searchQuery: state.query,
+                ),
+        );
+      },
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    final bool hasFilters = _networkFilters.selectedMethods.isNotEmpty;
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    // Use appBarData from cubit state
+    final appBarData = _cubit.state.appBarData;
     
     return PreferredSize(
-      preferredSize: hasFilters 
-          ? Size.fromHeight(kToolbarHeight + 5 + (Platform.isMacOS ? 25 : 0))
-          : Size.fromHeight(kToolbarHeight),
-      child: ListenableBuilder(
-        listenable: _networkFilters,
-        builder: (context, _) {
-          return NetworkCallAppBar(
-            filters: _networkFilters,
-            hasBottom: _networkFilters.selectedMethods.isNotEmpty,
-          );
-        },
+      preferredSize: Size.fromHeight(appBarData.height),
+      child: NetworkCallAppBar(
+        cubit: _cubit,
+        hasBottom: appBarData.hasFilters,
       ),
     );
   }
-
-  Widget _buildBody() {
-    return NetworkListBody(filters: _networkFilters);
-  }
 }
 
-class NetworkListBody extends StatelessWidget {
-  const NetworkListBody({
-    super.key,
-    required this.filters,
-  });
-  
-  final NetworkFilters filters;
+/// Empty state view displayed when no network calls are available
+class _EmptyStateView extends StatelessWidget {
+  const _EmptyStateView();
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: filters,
-      builder: (context, _) {
-        final filteredCalls = filters.filteredCalls;
-        
-        if (filteredCalls.isEmpty) {
-          return const Center(child: Text("No network calls"));
-        }
-        
-        return ListView.builder(
-          itemCount: filteredCalls.length,
-          itemBuilder: (context, index) {
-            final call = filteredCalls.elementAt(index);
-            return NetworkCallItem(
-              networkCall: call,
-              searchedText: filters.query,
-              onItemClicked: (call) => _navigateToDetails(context, call),
-            );
-          },
+    return const Center(
+      child: Text(
+        "No network calls",
+        style: TextStyle(fontSize: 16),
+      ),
+    );
+  }
+}
+
+/// ListView that displays the filtered network calls
+class _NetworkCallsListView extends StatelessWidget {
+  const _NetworkCallsListView({
+    required this.filteredCalls,
+    required this.searchQuery,
+  });
+
+  final Set<InfospectNetworkCall> filteredCalls;
+  final String searchQuery;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: filteredCalls.length,
+      itemBuilder: (context, index) {
+        final call = filteredCalls.elementAt(index);
+        return NetworkCallItem(
+          networkCall: call,
+          searchedText: searchQuery,
+          onItemClicked: (call) => _navigateToDetails(context, call),
         );
       },
     );

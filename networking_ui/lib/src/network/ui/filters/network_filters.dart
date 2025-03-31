@@ -1,43 +1,23 @@
-import '/src/network/infospect_network_call.dart';
 import 'package:flutter/material.dart';
+import '/src/network/infospect_network_call.dart';
 
+/// Handler for filtering network calls based on different criteria
 class FiltersHandler {
-  // final Set<InfospectNetworkCall> _networkCalls;
-
-  // const FiltersHandler({required Set<InfospectNetworkCall> networkCalls}) : _networkCalls = networkCalls;
-
-  static Iterable<InfospectNetworkCall> filterByMethod(String method, Iterable<InfospectNetworkCall> networkCalls) {
-    return networkCalls.where((call) => call.method == method).toSet();
-  }
-
-  // Method to search network calls by a query
-  static Iterable<InfospectNetworkCall> search(String query, Iterable<InfospectNetworkCall> networkCalls) {
+  /// Filters network calls based on search query
+  static Iterable<InfospectNetworkCall> search(
+      String query, Iterable<InfospectNetworkCall> networkCalls) {
+    if (query.isEmpty) return networkCalls;
+    
     return networkCalls.where((call) {
-      final String? url = call.request?.url.toString();
+      final url = call.request?.url;
       if (url == null) return false;
-      return url.toString().contains(query);
+      return url.toString().toLowerCase().contains(query.toLowerCase());
     });
   }
 
-  // Method to filter network calls by status code
-  static Iterable<InfospectNetworkCall> filterByStatusCode(
-      int statusCode, Iterable<InfospectNetworkCall> networkCalls) {
-    return networkCalls.where((call) {
-      return call.response?.status == statusCode;
-    });
-  }
-
-  // Method to filter network calls by status code range
-  static Iterable<InfospectNetworkCall> filterByStatus(String status, Iterable<InfospectNetworkCall> networkCalls) {
-    return networkCalls.where((call) {
-      final String? statusString = call.response?.statusString;
-      if (statusString == null) return false;
-      return status == 'success' ? statusString.contains('OK') : !statusString.contains('OK');
-    });
-  }
-
-  // add sort based on the time of the network call
-  static Iterable<InfospectNetworkCall> sortByTime(Iterable<InfospectNetworkCall> networkCalls) {
+  /// Sorts network calls by time (newest first)
+  static Iterable<InfospectNetworkCall> sortByTime(
+      Iterable<InfospectNetworkCall> networkCalls) {
     final list = networkCalls.toList();
     list.sort((a, b) {
       if (a.request == null || b.request == null) return 0;
@@ -46,92 +26,116 @@ class FiltersHandler {
     return list;
   }
 
-  // filter by Api type (GET, POST, PUT, DELETE)
+  /// Filters network calls by API method type (GET, POST, etc.)
   static Iterable<InfospectNetworkCall> filterByApiType(
-      Iterable<String> selectedMethods, Iterable<InfospectNetworkCall> networkCalls) {
+      Iterable<String> selectedMethods,
+      Iterable<InfospectNetworkCall> networkCalls) {
+    if (selectedMethods.isEmpty) return networkCalls;
+    
     return networkCalls.where((call) {
-      return selectedMethods.contains(call.request?.method);
+      final method = call.request?.method.toString().toUpperCase();
+      return selectedMethods.contains(method);
+    });
+  }
+  
+  /// Filters network calls by status code ranges (success, error, etc.)
+  static Iterable<InfospectNetworkCall> filterByStatusCode(
+      String statusCode, Iterable<InfospectNetworkCall> networkCalls) {
+    if (statusCode.isEmpty) return networkCalls;
+    
+    return networkCalls.where((call) {
+      final status = call.response?.status ?? -1;
+      switch (statusCode.toLowerCase()) {
+        case 'success':
+          return status >= 200 && status < 300;
+        case 'error':
+          return status >= 400 || status == -1;
+        default:
+          return true;
+      }
     });
   }
 }
 
+/// Manages filtering state and operations for network calls
 class NetworkFilters extends ChangeNotifier {
   NetworkFilters({
     required this.networkCallsGetter,
   });
 
+  /// Function to get the current set of network calls
   final ValueGetter<Set<InfospectNetworkCall>> networkCallsGetter;
-  // Set<InfospectNetworkCall> _networkCalls = <InfospectNetworkCall>{};
+  
+  String _query = '';
+  String _statusCode = '';
+  final Set<String> _selectedMethods = {};
 
+  /// Current search query
+  String get query => _query;
+  
+  /// Current status code filter
+  String get statusCode => _statusCode;
+  
+  /// Currently selected API methods
+  Set<String> get selectedMethods => _selectedMethods;
+
+  /// Gets filtered network calls based on current filters
   Set<InfospectNetworkCall> get filteredCalls {
+    // Start with all network calls
     Iterable<InfospectNetworkCall> calls = Set.from(networkCallsGetter.call());
-
-    if (query.isNotEmpty) {
-      calls = FiltersHandler.search(query, calls);
+    
+    // Apply filters sequentially
+    if (_statusCode.isNotEmpty) {
+      calls = FiltersHandler.filterByStatusCode(_statusCode, calls);
     }
-    // if (_method.isNotEmpty) {
-    //   calls = FiltersHandler.filterByMethod(_method, calls);
-    // }
-    // if (_status.isNotEmpty) {
-    //   calls = FiltersHandler.filterByStatus(_status, calls);
-    // }
-    // if (_statusCode != -1) {
-    //   calls = FiltersHandler.filterByStatusCode(_statusCode, calls);
-    // }
-    if (selectedMethods.isNotEmpty) {
-      calls = FiltersHandler.filterByApiType(selectedMethods, calls);
+    
+    if (_selectedMethods.isNotEmpty) {
+      calls = FiltersHandler.filterByApiType(_selectedMethods, calls);
     }
-
-    return FiltersHandler.sortByTime(calls).toSet();
+    
+    if (_query.isNotEmpty) {
+      calls = FiltersHandler.search(_query, calls);
+    }
+    
+    // Sort by time (newest first)
+    calls = FiltersHandler.sortByTime(calls);
+    
+    return calls.toSet();
   }
 
-  // void updateNetworkCalls(Set<InfospectNetworkCall> networkCalls) {
-  //   _networkCalls = networkCalls;
-  //   notifyListeners();
-  // }
-
-  String _query = '';
-  String get query => _query;
+  /// Updates the search query
   void onQueryChanged(String newQuery) {
     _query = newQuery;
     notifyListeners();
   }
 
-  // String _method = '';
-  // void onMethodChanged(String newMethod) {
-  //   _method = newMethod;
-  //   notifyListeners();
-  // }
-
-  // String _status = '';
-  // void onStatusChanged(String newStatus) {
-  //   _status = newStatus;
-  //   notifyListeners();
-  // }
-
-  // int _statusCode = -1;
-  // void onStatusCodeChanged(int newStatusCode) {
-  //   _statusCode = newStatusCode;
-  //   notifyListeners();
-  // }
-
-  final Set<String> _selectedMethods = <String>{};
-  Set<String> get selectedMethods => _selectedMethods;
-  void onMethodSelected(String value) {
-    _selectedMethods.add(value);
+  /// Updates the status code filter
+  void onStatusCodeChanged(String newStatusCode) {
+    _statusCode = newStatusCode;
     notifyListeners();
   }
 
-  void onMethodRemoved(String value) {
-    _selectedMethods.remove(value);
+  /// Toggles a method in the selected methods set
+  void onMethodSelected(String method) {
+    if (_selectedMethods.contains(method)) {
+      _selectedMethods.remove(method);
+    } else {
+      _selectedMethods.add(method);
+    }
     notifyListeners();
   }
 
+  /// Removes a method from the selected methods set
+  void onMethodRemoved(String method) {
+    _selectedMethods.remove(method);
+    notifyListeners();
+  }
+
+  /// Clears all filters
   void clearFilters() {
     _query = '';
-    // _method = '';
-    // _status = '';
-    // _statusCode = -1;
+    _statusCode = '';
+    _selectedMethods.clear();
     notifyListeners();
   }
 }
