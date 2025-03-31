@@ -41,7 +41,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final NetworkInspectorPluginController _networkController = NetworkInspectorPluginController();
+  final NetworkInspectorRouter _networkController =
+      NetworkInspectorRouterImpl();
   final List<String> _logs = [];
   late FlutoCoreHttpManager _httpClient;
 
@@ -53,23 +54,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _initNetworkMonitoring() async {
     try {
-      // Initialize the network inspector controller
-      await _networkController.init();
-      _addLog("Network controller initialized");
-      
       // Initialize the FlutoCoreHttpManager with NetworkCallInterceptor
       _httpClient = FlutoCoreHttpManager();
       _addLog("HTTP client created");
-      
-      // Add the interceptor to capture network calls
-      if (_networkController.interceptor != null) {
-        _httpClient.addInterceptor(_networkController.interceptor!);
-        _addLog("Network call interceptor added");
-      }
-      
+
+      NetworkCallInterceptor interceptor = NetworkCallInterceptor(
+        storage: _networkController,
+      );
+      _httpClient.addInterceptor(interceptor);
+      _addLog("Network call interceptor added");
+
       // Add some default headers
       _httpClient.addHeader('User-Agent', 'FlutoNetworkExample/1.0');
-      
+
       _addLog("Network monitoring initialized successfully");
     } catch (e) {
       _addLog("Error initializing network monitoring: $e");
@@ -79,7 +76,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _makeGetRequest() async {
     try {
       _addLog("Making GET request to jsonplaceholder.typicode.com...");
-      final request = http.Request('GET', Uri.parse('https://jsonplaceholder.typicode.com/posts/1'));
+      final request = http.Request(
+          'GET', Uri.parse('https://jsonplaceholder.typicode.com/posts/1'));
       final response = await _httpClient.sendRequest(request);
       _addLog("GET request complete: ${response.statusCode}");
     } catch (e) {
@@ -90,7 +88,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _makePostRequest() async {
     try {
       _addLog("Making POST request to jsonplaceholder.typicode.com...");
-      final request = http.Request('POST', Uri.parse('https://jsonplaceholder.typicode.com/posts'));
+      final request = http.Request(
+          'POST', Uri.parse('https://jsonplaceholder.typicode.com/posts'));
       request.headers['Content-Type'] = 'application/json; charset=UTF-8';
       request.body = jsonEncode(<String, String>{
         'title': 'Test Post',
@@ -107,7 +106,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _makePutRequest() async {
     try {
       _addLog("Making PUT request to jsonplaceholder.typicode.com...");
-      final request = http.Request('PUT', Uri.parse('https://jsonplaceholder.typicode.com/posts/1'));
+      final request = http.Request(
+          'PUT', Uri.parse('https://jsonplaceholder.typicode.com/posts/1'));
       request.headers['Content-Type'] = 'application/json; charset=UTF-8';
       request.body = jsonEncode(<String, String>{
         'id': '1',
@@ -125,14 +125,15 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _makeDeleteRequest() async {
     try {
       _addLog("Making DELETE request to jsonplaceholder.typicode.com...");
-      final request = http.Request('DELETE', Uri.parse('https://jsonplaceholder.typicode.com/posts/1'));
+      final request = http.Request(
+          'DELETE', Uri.parse('https://jsonplaceholder.typicode.com/posts/1'));
       final response = await _httpClient.sendRequest(request);
       _addLog("DELETE request complete: ${response.statusCode}");
     } catch (e) {
       _addLog("Error in DELETE request: ${_getDetailedErrorMessage(e)}");
     }
   }
-  
+
   // Helper method to provide more meaningful error messages
   String _getDetailedErrorMessage(dynamic error) {
     if (error is ClientException) {
@@ -158,15 +159,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _openNetworkInspector() {
-    if (_networkController.networkStorage == null) {
-      _addLog("Network storage not initialized");
-      return;
-    }
-
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => NetworksListScreen(
-          storage: _networkController.networkStorage!,
+          storage: _networkController,
         ),
       ),
     );
@@ -222,7 +218,8 @@ class _MyHomePageState extends State<MyHomePage> {
           const SizedBox(height: 16),
           const Divider(),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
               children: [
                 Text(
@@ -244,7 +241,8 @@ class _MyHomePageState extends State<MyHomePage> {
               itemBuilder: (context, index) {
                 final reversedIndex = _logs.length - 1 - index;
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 4.0),
                   child: Text(_logs[reversedIndex]),
                 );
               },

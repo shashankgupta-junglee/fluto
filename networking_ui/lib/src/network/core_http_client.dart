@@ -114,21 +114,3 @@ class CoreHttpManager extends BaseClient {
     }
   }
 }
-
-// class HttpClientMobile extends IHttpClient {
-//   @override
-//   Future<StreamedResponse> send(BaseRequest request) {
-//     return Client().send(request);
-//   }
-// }
-
-// IHttpClient getHttpClient() {
-//   return HttpClientMobile();
-// }
-
-
-
-// abstract class IHttpClient {
-//   Future<StreamedResponse> send(BaseRequest request);
-// }
-

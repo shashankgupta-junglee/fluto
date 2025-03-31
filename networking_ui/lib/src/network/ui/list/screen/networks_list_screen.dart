@@ -11,7 +11,7 @@ import 'dart:io';
 
 class NetworksListScreen extends StatefulWidget {
   const NetworksListScreen({super.key, required this.storage});
-  final NetworkStorage storage;
+  final NetworkInspectorRouter storage;
 
   @override
   State<NetworksListScreen> createState() => _NetworksListScreenState();
@@ -23,7 +23,7 @@ class _NetworksListScreenState extends State<NetworksListScreen> {
   @override
   void initState() {
     super.initState();
-    _networkFilters = NetworkFilters(networkCallsGetter: () => widget.storage.networkCalls);
+    _networkFilters = NetworkFilters(networkCallsGetter: () => widget.storage.networkCall.value.values.toSet());
     widget.storage.networkCall.addListener(_onNetworkCallsChanged);
   }
 

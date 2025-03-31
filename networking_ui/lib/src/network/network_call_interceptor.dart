@@ -6,26 +6,9 @@ import 'network_storage.dart';
 
 
 class NetworkCallInterceptor extends HttpInterceptor {
-  static final NetworkCallInterceptor _instance =
-      NetworkCallInterceptor._internal();
-  late final NetworkStorage storage;
-  static bool _isInitialized = false;
+  final NetworkInspectorRouter storage;
 
-  factory NetworkCallInterceptor.init(NetworkStorage storage) {
-    if (_isInitialized) return _instance;
-    _instance.storage = storage;
-    _isInitialized = true;
-    return _instance;
-  }
-
-  factory NetworkCallInterceptor() {
-    if (!_isInitialized) {
-      throw Exception("NetworkProvider is not initialized");
-    }
-    return _instance;
-  }
-
-  NetworkCallInterceptor._internal();
+  NetworkCallInterceptor({required this.storage});
 
   @override
   Future<void> onComplete(

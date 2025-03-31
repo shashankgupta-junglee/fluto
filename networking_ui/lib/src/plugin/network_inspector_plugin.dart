@@ -6,15 +6,16 @@ import 'package:networking_ui/networking_ui.dart';
 
 class NetworkInspectorPlugin extends Pluggable {
   NetworkInspectorPlugin({
-    required this.controller,
+ required this. controller, 
   }) : super(devIdentifier: "network_call");
 
-  final NetworkInspectorPluginController controller;
+  final NetworkInspectorRouter controller;
+
 
   @override
   Navigation get navigation => Navigation.byScreen(
         screen: NetworksListScreen(
-          storage: controller.networkStorage!,
+          storage: controller,
         ),
       );
 
@@ -24,16 +25,4 @@ class NetworkInspectorPlugin extends Pluggable {
         icon: Icons.bug_report,
         description: "Network call inspector",
       );
-}
-
-class NetworkInspectorPluginController {
-  NetworkStorage? networkStorage;
-  NetworkCallInterceptor? interceptor;
-
-  Future<void> init() async {
-    // Create a new instance of NetworkStorage (doesn't require parameters)
-    networkStorage = NetworkStorage();
-    // Initialize the interceptor with the storage
-    interceptor = NetworkCallInterceptor.init(networkStorage!);
-  }
 }
