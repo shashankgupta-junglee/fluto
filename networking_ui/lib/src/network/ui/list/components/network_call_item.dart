@@ -8,7 +8,7 @@ import '/src/network/infospect_network_call.dart';
 
 /// Widget that displays a network call item in a list view.
 class NetworkCallItem extends StatelessWidget {
-  final InfospectNetworkCall networkCall;
+final InfospectNetworkCall networkCall;
   final Function(InfospectNetworkCall) onItemClicked;
   final String searchedText;
 

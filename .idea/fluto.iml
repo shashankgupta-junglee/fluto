@@ -273,6 +273,9 @@
       <excludeFolder url="file://$MODULE_DIR$/unity_message_ui/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/unity_message_ui/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/unity_message_ui/build" />
+      <excludeFolder url="file://$MODULE_DIR$/networking_ui/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/networking_ui/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/networking_ui/example/build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -1,12 +1,11 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:networking_ui/src/network/domain/usecases/app_bar_configuration_usecase.dart';
 import 'package:networking_ui/src/network/domain/usecases/fetch_network_calls_usecase.dart';
 import 'package:networking_ui/src/network/domain/usecases/filter_network_calls_usecase.dart';
-import 'package:networking_ui/src/network/network_storage.dart';
-import '/src/network/infospect_network_call.dart';
-import 'dart:io';
+import 'package:networking_ui/src/network/network_inspector_router.dart';
+import 'package:networking_ui/src/network/infospect_network_call.dart';
+import 'dart:async';
 
 /// Data class for AppBar configuration
 class AppBarData {
@@ -80,7 +79,7 @@ class NetworkListScreenState {
 class NetworkListScreenCubit extends Cubit<NetworkListScreenState> {
   NetworkListScreenCubit({
     required NetworkInspectorRouter storage,
-  }) : _fetchNetworkCallsUseCase = FetchNetworkCallsUseCase(storage: storage),
+  }) : _fetchNetworkCallsUseCase = FetchNetworkCallsUseCase(router: storage),
        _filterNetworkCallsUseCase = FilterNetworkCallsUseCase(),
        _appBarConfigurationUseCase = AppBarConfigurationUseCase(),
        super(NetworkListScreenState(
@@ -89,8 +88,10 @@ class NetworkListScreenCubit extends Cubit<NetworkListScreenState> {
     // Initialize with current network calls
     _updateNetworkCalls();
     
-    // Set up listener to update when network calls change
-    _fetchNetworkCallsUseCase.addListener(_updateNetworkCalls);
+    // Set up stream subscription to update when network calls change
+    _networkCallsSubscription = _fetchNetworkCallsUseCase.networkCallsStream.listen((_) {
+      _updateNetworkCalls();
+    });
   }
   
   /// Use case for fetching network calls
@@ -102,10 +103,13 @@ class NetworkListScreenCubit extends Cubit<NetworkListScreenState> {
   /// Use case for app bar configuration
   final AppBarConfigurationUseCase _appBarConfigurationUseCase;
   
+  /// Stream subscription for network calls updates
+  late final StreamSubscription<Map<int, InfospectNetworkCall>> _networkCallsSubscription;
+  
   @override
   Future<void> close() {
-    // Remove listener when cubit is closed
-    _fetchNetworkCallsUseCase.removeListener(_updateNetworkCalls);
+    // Cancel subscription when cubit is closed
+    _networkCallsSubscription.cancel();
     return super.close();
   }
   

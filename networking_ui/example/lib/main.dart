@@ -7,8 +7,6 @@ import 'package:http/http.dart';
 import 'package:networking_ui/networking_ui.dart';
 import 'package:http/http.dart' as http;
 import 'package:networking_ui/src/network/new_core_http_client.dart';
-import 'package:networking_ui/src/network/network_call_interceptor.dart';
-import 'package:networking_ui/src/network/core_http_client.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,7 +39,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final NetworkInspectorRouter _networkController =
+  final NetworkInspectorRouter _networkInspectorRouter =
       NetworkInspectorRouterImpl();
   final List<String> _logs = [];
   late FlutoCoreHttpManager _httpClient;
@@ -59,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _addLog("HTTP client created");
 
       NetworkCallInterceptor interceptor = NetworkCallInterceptor(
-        storage: _networkController,
+        router: _networkInspectorRouter,
       );
       _httpClient.addInterceptor(interceptor);
       _addLog("Network call interceptor added");
@@ -162,7 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => NetworksListScreen(
-          dataRouter: _networkController,
+          dataRouter: _networkInspectorRouter,
         ),
       ),
     );

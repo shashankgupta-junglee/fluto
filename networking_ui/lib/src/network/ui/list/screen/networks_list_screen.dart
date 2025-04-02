@@ -1,5 +1,5 @@
 import '/src/network/infospect_network_call.dart';
-import '/src/network/network_storage.dart';
+import '../../../network_inspector_router.dart';
 import '/src/network/ui/details/bloc/interceptor_details_bloc.dart';
 import '/src/network/ui/details/screen/interceptor_details_screen.dart';
 import '/src/network/ui/list/components/network_call_item.dart';
@@ -7,19 +7,20 @@ import '/src/network/ui/list/cubit/network_list_screen_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../components/network_call_app_bar.dart';
-import 'dart:io';
 
 /// Screen that displays a list of network calls with filtering capabilities.
 class NetworksListScreen extends StatelessWidget {
   NetworksListScreen({
     super.key,
-    required this.dataRouter,
-  });
-  final NetworkInspectorRouter dataRouter;
+    required NetworkInspectorRouter dataRouter,
+  }): 
+    
+      _cubit = NetworkListScreenCubit(
+        storage: dataRouter,
+      );
 
-  late final NetworkListScreenCubit _cubit = NetworkListScreenCubit(
-    storage: dataRouter,
-  );
+
+  final NetworkListScreenCubit _cubit;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +28,7 @@ class NetworksListScreen extends StatelessWidget {
       bloc: _cubit,
       builder: (context, state) {
         return Scaffold(
-          appBar: _buildAppBar(context),
+          appBar: _buildAppBar(),
           body: state.filteredCalls.isEmpty
               ? const _EmptyStateView()
               : _NetworkCallsListView(
@@ -39,7 +40,7 @@ class NetworksListScreen extends StatelessWidget {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
+  PreferredSizeWidget _buildAppBar() {
     // Use appBarData from cubit state
     final appBarData = _cubit.state.appBarData;
     
@@ -85,6 +86,7 @@ class _NetworkCallsListView extends StatelessWidget {
       itemBuilder: (context, index) {
         final call = filteredCalls.elementAt(index);
         return NetworkCallItem(
+          key: ValueKey(call.hashCode),
           networkCall: call,
           searchedText: searchQuery,
           onItemClicked: (call) => _navigateToDetails(context, call),

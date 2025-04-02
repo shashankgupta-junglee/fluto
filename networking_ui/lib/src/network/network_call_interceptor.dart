@@ -2,13 +2,13 @@ import 'package:http/http.dart';
 import 'package:networking_ui/src/network/new_core_http_client.dart';
 
 import 'infospect_network_call.dart';
-import 'network_storage.dart';
+import 'network_inspector_router.dart';
 
 
 class NetworkCallInterceptor extends HttpInterceptor {
-  final NetworkInspectorRouter storage;
+  final NetworkInspectorRouter router;
 
-  NetworkCallInterceptor({required this.storage});
+  NetworkCallInterceptor({required this.router});
 
   @override
   Future<void> onComplete(
@@ -44,7 +44,7 @@ class NetworkCallInterceptor extends HttpInterceptor {
       server: request.url.host,
     );
 
-    storage.addNetworkCall(networkCall);
+    router.addNetworkCall(networkCall);
   }
 
   InfospectNetworkRequest _onRequest(
